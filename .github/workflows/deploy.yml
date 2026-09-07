@@ -1,0 +1,60 @@
+# 构建并部署到 GitHub Pages
+#
+# 触发：推送到 main 分支，或在 Actions 页面手动点 "Run workflow"
+name: Build & Deploy Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 只跑一个部署任务，后来的排队，不互相取消
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建静态站点
+        run: npm run build
+
+      - name: 生成 .nojekyll（否则 Pages 会忽略下划线开头的目录）
+        run: touch dist/.nojekyll
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

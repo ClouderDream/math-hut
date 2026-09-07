@@ -1,0 +1,22 @@
+{
+  "name": "math-hut",
+  "version": "1.0.0",
+  "private": true,
+  "description": "云梦的数理小屋 —— 数学与物理主题的纯静态个人博客",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "build": "node src/build.js",
+    "preview": "node scripts/dev.js --no-watch --port 4173",
+    "new": "node scripts/new-post.js",
+    "hash-password": "node scripts/hash-password.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.10.0",
+    "katex": "^0.16.11",
+    "markdown-it": "^14.1.0"
+  }
+}
