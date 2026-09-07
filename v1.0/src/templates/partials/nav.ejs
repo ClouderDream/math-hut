@@ -45,9 +45,6 @@
       <li><a href="<%= u('archive/') %>" class="<%= currentPath === u('archive/') ? 'active' : '' %>">归档</a></li>
       <li><a href="<%= u('about/') %>" class="<%= currentPath === u('about/') ? 'active' : '' %>">关于</a></li>
       <li><a href="<%= u('search/') %>" class="<%= currentPath === u('search/') ? 'active' : '' %>">搜索</a></li>
-      <% if (cfg.admin.enabled) { %>
-        <li><a href="<%= u('admin/') %>">后台</a></li>
-      <% } %>
     </ul>
 
     <div class="nav-actions">

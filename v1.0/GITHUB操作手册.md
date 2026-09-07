@@ -1,22 +1,22 @@
 # 云梦的数理小屋 · GitHub 操作手册
 
-> 适用项目：`G:\buddywork\9.7云梦数理小屋`（静态博客生成器）
-> 仓库：`https://github.com/ClouderDream/math-hut`（Public）
-> 线上站点：`https://clouderdream.github.io/math-hut/`
+> 适用项目：`G:\buddywork\9.7云梦数理小屋`（静态博客生成器）  
+> 仓库：`https://github.com/ClouderDream/math-hut`（Public）  
+> 线上站点：`https://clouderdream.github.io/math-hut/`  
 > 当前版本：**v1.0**（已打 tag 并推送）
 
 ---
 
 ## 一、整体结构
 
-| 项 | 说明 |
-|---|---|
-| 源码 | 本地 `G:\buddywork\9.7云梦数理小屋`，零框架 Node 静态生成器（EJS 模板 + KaTeX 预渲染） |
-| 仓库 | `ClouderDream/math-hut`，Public，**免费** |
-| 部署 | GitHub Actions 自动构建（Node 22）→ 部署到 GitHub Pages |
-| 工作流 | `.github/workflows/deploy.yml`（`push` 到 `main` 或手动 `workflow_dispatch` 触发） |
-| Pages 源 | **GitHub Actions**（`build_type: workflow`，不是"从分支部署"） |
-| 域名 | `https://clouderdream.github.io/math-hut/`（可后续绑自定义域名，需自费买域名） |
+| 项       | 说明                                                                         |
+| ------- | -------------------------------------------------------------------------- |
+| 源码      | 本地 `G:\buddywork\9.7云梦数理小屋`，零框架 Node 静态生成器（EJS 模板 + KaTeX 预渲染）             |
+| 仓库      | `ClouderDream/math-hut`，Public，**免费**                                      |
+| 部署      | GitHub Actions 自动构建（Node 22）→ 部署到 GitHub Pages                             |
+| 工作流     | `.github/workflows/deploy.yml`（`push` 到 `main` 或手动 `workflow_dispatch` 触发） |
+| Pages 源 | **GitHub Actions**（`build_type: workflow`，不是"从分支部署"）                       |
+| 域名      | `https://clouderdream.github.io/math-hut/`（可后续绑自定义域名，需自费买域名）               |
 
 ---
 
@@ -33,7 +33,7 @@ git commit -m "更新说明"
 git push
 ```
 
-推送后 Actions 自动 **构建 → 部署**，通常 1–2 分钟上线。站点网址不变。
+推送后 Actions 自动 **构建 → 部署**，通常 1–2 分钟上线。站点网址不变。  
 凭据已由 Git Credential Manager 存入本机，**`git push` 无需再输入账号密码**。
 
 ---
@@ -64,11 +64,11 @@ git push
 
 ## 五、查看状态与排错
 
-| 现象 | 排查 |
-|---|---|
-| Actions run 失败 | 进该 run 看 `build`/`deploy` 日志；最常见是 `npm ci` 网络抖动 → 点 `Re-run jobs` 重试 |
-| 站点 404 | 首次部署较慢（等 1–2 分钟）；确认 `main` 已有内容、`deploy.yml` 未被改坏 |
-| 部署后内容没更新 | 强刷浏览器；确认 push 成功且最新 run 为 `success` |
+| 现象               | 排查                                                                            |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Actions run 失败   | 进该 run 看 `build`/`deploy` 日志；最常见是 `npm ci` 网络抖动 → 点 `Re-run jobs` 重试          |
+| 站点 404           | 首次部署较慢（等 1–2 分钟）；确认 `main` 已有内容、`deploy.yml` 未被改坏                             |
+| 部署后内容没更新         | 强刷浏览器；确认 push 成功且最新 run 为 `success`                                           |
 | `git push` 弹窗/失败 | 凭据助手应为 `manager`（GCM）；`git config --global credential.helper` 检查；必要时重走 GCM 登录 |
 
 Pages 设置确认路径：仓库 → Settings → Pages → Source 应显示 **GitHub Actions**。
@@ -113,3 +113,4 @@ git tag -a v1.x -m "..."  # 打版本
 git push origin v1.x      # 推 tag
 git ls-remote --tags origin   # 看远端 tag
 ```
+

@@ -67,16 +67,13 @@
     </div>
   </section>
 
-  <% if (cfg.admin.enabled) { %>
   <section class="widget">
-    <h3 class="widget-title">订阅 / 管理</h3>
+    <h3 class="widget-title">订阅</h3>
     <div class="widget-body">
       <ul>
         <% if (cfg.feed.enableRSS) { %><li><a href="<%= u('rss.xml') %>">RSS 订阅</a></li><% } %>
         <li><a href="<%= u('sitemap.xml') %>">站点地图</a></li>
-        <li><a href="<%= u('admin/') %>">后台管理</a></li>
       </ul>
     </div>
   </section>
-  <% } %>
 </aside>
