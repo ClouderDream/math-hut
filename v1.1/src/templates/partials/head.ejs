@@ -15,6 +15,9 @@
 <meta property="og:url" content="<%= canonical %>">
 <meta property="og:site_name" content="<%= site.title %>">
 <meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="<%= u('assets/img/favicon.svg') %>" type="image/svg+xml">
 <% if (cfg.feed.enableRSS) { %><link rel="alternate" type="application/rss+xml" title="<%= site.title %>" href="<%= u('rss.xml') %>"><% } %>
 <link rel="stylesheet" href="<%= u('assets/css/katex.min.css') %>?v=<%= v %>">

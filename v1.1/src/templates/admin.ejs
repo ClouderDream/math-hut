@@ -19,17 +19,23 @@
 <!-- ============ 登录 ============ -->
 <section class="admin-login" id="loginView">
   <form class="login-card" id="loginForm">
-    <h1 class="login-title"><%= site.title %> · 后台</h1>
-    <p class="login-desc">输入管理口令与 GitHub Token 进入。凭证只保存在你自己的浏览器里，不会上传任何服务器。</p>
+    <div class="brand">
+      <div class="brand-icon">&Sigma;</div>
+      <h1 class="login-title"><%= site.title %></h1>
+      <p class="login-subtitle">后台管理</p>
+    </div>
+
+    <p class="login-desc">请输入管理口令与 GitHub Token。Token 仅保存在当前浏览器，不会上传任何服务器。</p>
 
     <label class="field">
       <span>管理口令</span>
       <input type="password" id="passInput" placeholder="你设置的口令" autocomplete="current-password" required>
     </label>
 
-    <label class="field">
+    <label class="field token-field">
       <span>GitHub Token（PAT）</span>
       <input type="password" id="tokenInput" placeholder="ghp_..." autocomplete="off" required>
+      <button type="button" class="token-toggle" id="tokenToggle" tabindex="-1">显示</button>
     </label>
 
     <label class="checkbox">
@@ -44,11 +50,11 @@
       <summary>怎么拿到 GitHub Token？</summary>
       <ol>
         <li>打开 <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">github.com/settings/tokens/new</a></li>
-        <li>选 <strong>Classic</strong> 或 <strong>Fine-grained</strong> token 均可</li>
-        <li>Classic：勾选 <strong>repo</strong>；Fine-grained：仓库选 <code><%= cfg.admin.repo %></code>，Contents 设为 <strong>Read and write</strong></li>
-        <li>Expiration 建议 90 天，生成后复制 <code>ghp_...</code> 粘贴到上方</li>
+        <li>选择 <strong>Classic token</strong>，Expiration 选 90 天</li>
+        <li>勾选 <strong>repo</strong>（完整仓库读写）</li>
+        <li>点 Generate，复制 <code>ghp_...</code> 粘贴到上方</li>
       </ol>
-      <p class="warn">⚠️ 这串 Token 等同于仓库的写权限。泄露请立刻到同一页面 Revoke。</p>
+      <p class="warn">⚠️ Token 等同于仓库写权限。若泄露，请立刻到 GitHub 设置页 Revoke。</p>
     </details>
 
     <p class="login-back"><a href="<%= u('/') %>">← 返回站点</a></p>

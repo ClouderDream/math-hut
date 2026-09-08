@@ -17,12 +17,22 @@
   }
 
   /* ---------------- 口令校验 ---------------- */
+  function subtleAvailable() {
+    return !!(typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest);
+  }
   async function sha256(text) {
+    if (!subtleAvailable()) throw new Error('当前环境不支持 Web Crypto。请用 https 访问，或换用 Chrome/Edge/Firefox 最新版。');
     var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
     return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
   }
   async function checkPass(pw) {
     return await sha256((H.passSalt || '') + pw) === H.passHash;
+  }
+
+  function setLoginError(msg, html) {
+    var err = $('loginError');
+    err[html ? 'innerHTML' : 'textContent'] = msg;
+    err.hidden = false;
   }
 
   /* ---------------- Markdown 预览 ---------------- */
@@ -369,20 +379,35 @@
   document.addEventListener('DOMContentLoaded', function () {
     tryAutoLogin();
 
+    $('tokenToggle').addEventListener('click', function () {
+      var input = $('tokenInput');
+      input.type = input.type === 'password' ? 'text' : 'password';
+      $('tokenToggle').textContent = input.type === 'password' ? '显示' : '隐藏';
+    });
+
     $('loginForm').addEventListener('submit', async function (ev) {
       ev.preventDefault();
-      var err = $('loginError'); err.hidden = true;
+      var err = $('loginError'); err.hidden = true; err.textContent = '';
       var pass = $('passInput').value;
       var token = $('tokenInput').value.trim();
-      if (!pass || !token) { err.textContent = '口令与 Token 都要填'; err.hidden = false; return; }
+      if (!pass || !token) { setLoginError('口令与 Token 都要填'); return; }
       $('loginBtn').disabled = true; $('loginBtn').textContent = '验证中…';
       try {
-        if (!await checkPass(pass)) throw new Error('口令不正确');
+        var ok = await checkPass(pass);
+        if (!ok) { setLoginError('管理口令不正确'); return; }
         window.GH.setToken(token, $('remember').checked);
-        await window.GH.verify();
+        try {
+          await window.GH.verify();
+        } catch (e) {
+          var status = e.status || 0;
+          var tip = status === 401 || status === 403
+            ? 'Token 无效或权限不足。请确认：① 没有复制多余空格；② Token 已勾选 repo（Classic）或 Contents 读写（Fine-grained）；③ Token 未过期。'
+            : '无法连接 GitHub 校验 Token：' + (e.message || ('HTTP ' + status));
+          throw new Error(tip);
+        }
         showApp();
       } catch (e) {
-        err.textContent = e.message || '登录失败'; err.hidden = false;
+        setLoginError(e.message || '登录失败', true);
         window.GH.clearToken();
       } finally { $('loginBtn').disabled = false; $('loginBtn').textContent = '进入后台'; }
     });
