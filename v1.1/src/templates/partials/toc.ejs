@@ -1,0 +1,19 @@
+<% if (toc && toc.length) { %>
+<aside class="toc" id="toc" aria-label="目录">
+  <p class="toc-title">目录</p>
+  <ul class="toc-list">
+    <% toc.forEach(function (item) { %>
+      <li class="toc-item toc-h<%= item.level %>">
+        <a href="#<%= item.id %>" data-toc-link><%= item.text %></a>
+        <% if (item.children && item.children.length) { %>
+          <ul>
+            <% item.children.forEach(function (c) { %>
+              <li class="toc-item toc-h3"><a href="#<%= c.id %>" data-toc-link><%= c.text %></a></li>
+            <% }); %>
+          </ul>
+        <% } %>
+      </li>
+    <% }); %>
+  </ul>
+</aside>
+<% } %>

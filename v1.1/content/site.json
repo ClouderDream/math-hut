@@ -1,0 +1,21 @@
+{
+  "site": {
+    "title": "云梦的数理小屋",
+    "subtitle": "数学与物理的读书笔记",
+    "description": "一个记录微积分、线性代数、经典力学与量子力学的个人博客，包含推导、公式与可运行代码。",
+    "author": "云梦",
+    "copyright": "© 2026 云梦",
+    "banner": ""
+  },
+  "nav": [
+    { "text": "首页", "link": "/" },
+    { "text": "归档", "link": "/archive/" },
+    { "text": "标签", "link": "/tags/" },
+    { "text": "关于", "link": "/about/" },
+    { "text": "搜索", "link": "/search/" }
+  ],
+  "social": [
+    { "name": "GitHub", "icon": "github", "link": "https://github.com/ClouderDream", "text": "github.com/ClouderDream" },
+    { "name": "邮箱", "icon": "mail", "link": "mailto:your-email@example.com", "text": "your-email@example.com" }
+  ]
+}

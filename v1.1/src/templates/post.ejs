@@ -1,0 +1,56 @@
+<%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v, ogType: 'article' }) %>
+<%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+
+<div class="layout">
+  <main class="content" id="main">
+    <article class="post-single">
+      <header>
+        <h1 class="post-title"><%= post.title %></h1>
+        <p class="post-meta">
+          <time datetime="<%= post.dateISO %>"><%= post.date %></time>
+          <span>·</span>
+          <span>约 <%= post.readingTime %> 分钟</span>
+          <span>·</span>
+          <span><%= post.wordCount %> 字</span>
+          <% if (post.tags && post.tags.length) { %>
+            <span>·</span>
+            <% post.tags.forEach(function (t) { %>
+              <a class="tag-inline" href="<%= u('tags/' + encodeURIComponent(t) + '/') %>"><%= t %></a>
+            <% }); %>
+          <% } %>
+        </p>
+      </header>
+
+      <% if (post.cover) { %>
+        <img class="post-cover" src="<%= u(post.cover) %>" alt="">
+      <% } %>
+
+      <% if (post.toc && post.toc.length) { %>
+        <%- include('partials/toc', { toc: post.toc }) %>
+      <% } %>
+
+      <div class="post-body">
+        <%- post.html %>
+      </div>
+
+      <nav class="post-nav" aria-label="文章导航">
+        <% if (prev) { %>
+          <a href="<%= prev.url %>">
+            <span class="label">← 上一篇</span>
+            <span class="title"><%= prev.title %></span>
+          </a>
+        <% } else { %><span></span><% } %>
+        <% if (next) { %>
+          <a href="<%= next.url %>">
+            <span class="label">下一篇 →</span>
+            <span class="title"><%= next.title %></span>
+          </a>
+        <% } else { %><span></span><% } %>
+      </nav>
+    </article>
+  </main>
+
+  <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+</div>
+
+<%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>

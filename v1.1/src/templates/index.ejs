@@ -1,0 +1,38 @@
+<%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v, noindex: noindex, ogType: 'website' }) %>
+<%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+
+<div class="layout">
+  <main class="content" id="main">
+    <h1 class="content-title">最新文章</h1>
+    <p class="content-subtitle">关于数学与物理的读书笔记 · 共 <%= sidebar.totalPosts %> 篇 · 第 <%= pager.current %> / <%= pager.totalPages %> 页</p>
+
+    <div class="post-list">
+      <% posts.forEach(function (post) { %>
+        <article class="post-list-item">
+          <h3><a href="<%= post.url %>"><%= post.title %></a></h3>
+          <p class="excerpt"><%= post.summary %></p>
+          <p class="meta">
+            <time datetime="<%= post.dateISO %>"><%= post.date %></time>
+            <span>·</span>
+            <span><%= post.readingTime %> 分钟</span>
+            <% if (post.tags && post.tags.length) { %>
+              <span>·</span>
+              <% post.tags.forEach(function (t) { %>
+                <a class="tag-inline" href="<%= u('tags/' + encodeURIComponent(t) + '/') %>"><%= t %></a>
+              <% }); %>
+            <% } %>
+          </p>
+        </article>
+      <% }); %>
+      <% if (!posts.length) { %>
+        <p class="empty">还没有文章。运行 <code>npm run new "文章标题"</code> 创建第一篇。</p>
+      <% } %>
+    </div>
+
+    <%- include('partials/pagination', { pager: pager }) %>
+  </main>
+
+  <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+</div>
+
+<%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>

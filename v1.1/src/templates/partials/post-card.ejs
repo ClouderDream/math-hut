@@ -1,0 +1,17 @@
+<article class="post-card">
+  <h2 class="post-card-title"><a href="<%= post.url %>"><%= post.title %></a></h2>
+  <p class="post-card-summary"><%= post.summary %></p>
+  <div class="post-card-meta">
+    <time datetime="<%= post.dateISO %>"><%= post.date %></time>
+    <span class="dot">·</span>
+    <span><%= post.readingTime %> 分钟</span>
+    <% if (post.tags && post.tags.length) { %>
+      <span class="dot">·</span>
+      <span class="post-card-tags">
+        <% post.tags.forEach(function (t, i) { %>
+          <a class="tag-chip" href="<%= u('tags/' + encodeURIComponent(t) + '/') %>"><%= t %></a>
+        <% }); %>
+      </span>
+    <% } %>
+  </div>
+</article>

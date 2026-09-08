@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>后台管理 · <%= site.title %></title>
+<link rel="icon" href="<%= u('assets/img/favicon.svg') %>" type="image/svg+xml">
+<link rel="stylesheet" href="<%= u('assets/css/admin.css') %>?v=<%= v %>">
+<link rel="stylesheet" href="<%= u('assets/css/main.css') %>?v=<%= v %>">
+<link rel="stylesheet" href="<%= u('assets/css/code.css') %>?v=<%= v %>">
+<link rel="stylesheet" href="<%= u('admin/vendor/katex.min.css') %>?v=<%= v %>">
+<script>
+(function(){try{var t=localStorage.getItem('theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+<body class="admin-body">
+
+<!-- ============ 登录 ============ -->
+<section class="admin-login" id="loginView">
+  <form class="login-card" id="loginForm">
+    <h1 class="login-title"><%= site.title %> · 后台</h1>
+    <p class="login-desc">输入管理口令与 GitHub Token 进入。凭证只保存在你自己的浏览器里，不会上传任何服务器。</p>
+
+    <label class="field">
+      <span>管理口令</span>
+      <input type="password" id="passInput" placeholder="你设置的口令" autocomplete="current-password" required>
+    </label>
+
+    <label class="field">
+      <span>GitHub Token（PAT）</span>
+      <input type="password" id="tokenInput" placeholder="ghp_..." autocomplete="off" required>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" id="remember"> 记住 Token（公用电脑不要勾）
+    </label>
+
+    <button class="btn primary block" type="submit" id="loginBtn">进入后台</button>
+
+    <p class="login-error" id="loginError" hidden></p>
+
+    <details class="login-help">
+      <summary>怎么拿到 GitHub Token？</summary>
+      <ol>
+        <li>打开 <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">github.com/settings/tokens/new</a></li>
+        <li>选 <strong>Classic</strong> 或 <strong>Fine-grained</strong> token 均可</li>
+        <li>Classic：勾选 <strong>repo</strong>；Fine-grained：仓库选 <code><%= cfg.admin.repo %></code>，Contents 设为 <strong>Read and write</strong></li>
+        <li>Expiration 建议 90 天，生成后复制 <code>ghp_...</code> 粘贴到上方</li>
+      </ol>
+      <p class="warn">⚠️ 这串 Token 等同于仓库的写权限。泄露请立刻到同一页面 Revoke。</p>
+    </details>
+
+    <p class="login-back"><a href="<%= u('/') %>">← 返回站点</a></p>
+  </form>
+</section>
+
+<!-- ============ 后台主体 ============ -->
+<section class="admin-app" id="appView" hidden>
+  <aside class="admin-side" id="appSide">
+    <div class="admin-side-head">
+      <strong id="sideTitle">文章列表</strong>
+      <button class="btn sm" id="newBtn" type="button">＋ 新建</button>
+    </div>
+    <p class="admin-side-meta" id="sideMeta"></p>
+    <div class="admin-search" id="sideSearch">
+      <input type="search" id="listSearch" placeholder="搜索文章…" autocomplete="off">
+    </div>
+    <ul class="admin-list" id="postList"><li class="empty">加载中…</li></ul>
+    <div class="admin-side-foot">
+      <button class="btn sm ghost block" id="logoutBtn" type="button">退出并清除 Token</button>
+    </div>
+  </aside>
+
+  <header class="admin-header">
+    <h2 id="headerTitle">文章管理</h2>
+    <div class="tabs">
+      <button class="tab active" data-tab="articles">文章</button>
+      <button class="tab" data-tab="pages">页面</button>
+      <button class="tab" data-tab="media">媒体库</button>
+      <button class="tab" data-tab="settings">站点设置</button>
+    </div>
+  </header>
+
+  <main class="admin-main" id="mainArea">
+    <!-- 文章管理 -->
+    <div id="tab-articles">
+      <div class="admin-toolbar">
+        <input class="title-input" id="fTitle" placeholder="文章标题" autocomplete="off">
+        <button class="btn primary" id="saveBtn" type="button">保存并发布</button>
+        <button class="btn ghost" id="saveDraftBtn" type="button">存草稿</button>
+        <button class="btn danger" id="deleteBtn" type="button">删除</button>
+      </div>
+
+      <div class="admin-meta-grid">
+        <label class="field"><span>日期</span><input id="fDate" type="date"></label>
+        <label class="field"><span>slug（URL）</span><input id="fSlug" placeholder="limit-and-derivative" autocomplete="off"></label>
+        <label class="field"><span>摘要</span><input id="fSummary" placeholder="一句话概括这篇文章" autocomplete="off"></label>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px">
+          <span>草稿</span><input type="checkbox" id="fDraft">
+        </label>
+      </div>
+
+      <label class="field">
+        <span>顶部图片（cover）</span>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="fCover" placeholder="images/xxx.jpg 或留空" style="flex:1">
+          <button class="btn ghost sm" id="pickCoverBtn" type="button">从媒体库选</button>
+        </div>
+      </label>
+
+      <label class="field">
+        <span>标签</span>
+        <div class="tag-box" id="tagBox">
+          <input type="text" id="tagInput" placeholder="输入后回车，或点下方建议" autocomplete="off">
+        </div>
+        <div class="tag-suggestions" id="tagSuggestions"></div>
+      </label>
+
+      <div class="editor-wrap">
+        <div class="editor-pane">
+          <div class="pane-head">Markdown 源码</div>
+          <textarea id="fBody" spellcheck="false" placeholder="在此书写 Markdown。行内公式 $E=mc^2$，行间公式另起一行 $$ ... $$"></textarea>
+        </div>
+        <div class="editor-pane">
+          <div class="pane-head">实时预览</div>
+          <div class="preview" id="preview"></div>
+        </div>
+      </div>
+
+      <p class="status" id="status"></p>
+    </div>
+
+    <!-- 媒体库 -->
+    <div id="tab-media" hidden>
+      <div class="admin-toolbar" style="margin-bottom:18px">
+        <label class="btn primary" for="uploadInput">＋ 上传图片</label>
+        <input type="file" id="uploadInput" accept="image/*" hidden>
+        <span class="status" id="uploadStatus" style="margin:0"></span>
+      </div>
+      <div class="media-grid" id="mediaGrid"><div class="empty">加载中…</div></div>
+    </div>
+
+    <!-- 站点设置 -->
+    <div id="tab-settings" hidden>
+      <form class="settings-form" id="settingsForm">
+        <div class="admin-toolbar" style="margin-bottom:18px">
+          <h3 style="margin:0">站点设置</h3>
+          <button class="btn primary" type="submit" id="saveSettingsBtn">保存设置</button>
+        </div>
+
+        <label class="field"><span>站点标题</span><input type="text" id="sTitle" required></label>
+        <label class="field"><span>副标题</span><input type="text" id="sSubtitle"></label>
+        <label class="field"><span>站点描述（SEO）</span><textarea id="sDesc"></textarea></label>
+        <label class="field"><span>作者</span><input type="text" id="sAuthor"></label>
+        <label class="field"><span>版权信息</span><input type="text" id="sCopyright"></label>
+        <label class="field">
+          <span>全站顶部 Banner（留空为纯色标题栏）</span>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="sBanner" placeholder="images/banner.jpg" style="flex:1">
+            <button class="btn ghost sm" id="pickBannerBtn" type="button">从媒体库选</button>
+          </div>
+        </label>
+
+        <label class="field"><span>导航菜单（JSON）</span><textarea id="sNav" rows="6"></textarea></label>
+        <label class="field"><span>社交链接（JSON）</span><textarea id="sSocial" rows="6"></textarea></label>
+
+        <p class="status" id="settingsStatus"></p>
+      </form>
+    </div>
+  </main>
+</section>
+
+<script src="<%= u('admin/vendor/markdown-it.min.js') %>?v=<%= v %>"></script>
+<script src="<%= u('admin/vendor/katex.min.js') %>?v=<%= v %>"></script>
+<script src="<%= u('admin/vendor/md-math.js') %>?v=<%= v %>"></script>
+<script src="<%= u('admin/config.js') %>?v=<%= v %>"></script>
+<script src="<%= u('admin/github.js') %>?v=<%= v %>"></script>
+<script src="<%= u('admin/admin.js') %>?v=<%= v %>"></script>
+</body>
+</html>

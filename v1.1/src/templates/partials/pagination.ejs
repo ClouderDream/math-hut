@@ -1,0 +1,23 @@
+<% if (pager.totalPages > 1) { %>
+<nav class="pagination" aria-label="分页导航">
+  <% if (pager.current > 1) { %>
+    <a href="<%= pager.prevUrl %>">← 上一页</a>
+  <% } else { %>
+    <span class="disabled">← 上一页</span>
+  <% } %>
+
+  <% pager.links.forEach(function (n) { %>
+    <% if (n === '…') { %>
+      <span class="disabled" style="border:none;background:transparent">…</span>
+    <% } else { %>
+      <a href="<%= pager.urlOf(n) %>" class="<%= n === pager.current ? 'current' : '' %>"><%= n %></a>
+    <% } %>
+  <% }); %>
+
+  <% if (pager.current < pager.totalPages) { %>
+    <a href="<%= pager.nextUrl %>">下一页 →</a>
+  <% } else { %>
+    <span class="disabled">下一页 →</span>
+  <% } %>
+</nav>
+<% } %>
