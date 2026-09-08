@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>后台管理 · <%= site.title %></title>
 <link rel="icon" href="<%= u('assets/img/favicon.svg') %>" type="image/svg+xml">
 <link rel="stylesheet" href="<%= u('assets/css/admin.css') %>?v=<%= v %>">
@@ -58,6 +61,7 @@
     </details>
 
     <p class="login-back"><a href="<%= u('/') %>">← 返回站点</a></p>
+    <p class="login-version">构建版本 <%= v %></p>
   </form>
 </section>
 

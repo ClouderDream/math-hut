@@ -239,6 +239,14 @@
 .login-back { margin: 18px 0 0; text-align: center; font-size: 13px; }
 .login-back a { color: var(--admin-muted); text-decoration: none; }
 .login-back a:hover { color: var(--admin-primary); }
+.login-version {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 11px;
+  font-family: var(--admin-mono);
+  color: var(--admin-muted);
+  opacity: .7;
+}
 
 /* ---------------- 后台主体框架 ---------------- */
 .admin-app {
