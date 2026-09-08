@@ -49,6 +49,13 @@
 
     <p class="login-error" id="loginError" hidden></p>
 
+    <div class="login-log" id="loginLog"></div>
+
+    <div class="login-diag">
+      <button type="button" class="btn ghost sm block" id="testTokenBtn">仅测试 Token 连通性（不校验口令）</button>
+      <pre class="login-test" id="testResult" hidden></pre>
+    </div>
+
     <details class="login-help">
       <summary>怎么拿到 GitHub Token？</summary>
       <ol>
@@ -58,6 +65,7 @@
         <li>点 Generate，复制 <code>ghp_...</code> 粘贴到上方</li>
       </ol>
       <p class="warn">⚠️ Token 等同于仓库写权限。若泄露，请立刻到 GitHub 设置页 Revoke。</p>
+      <p class="warn">⚠️ Edge 浏览器「跟踪防护」可能拦截 api.github.com：<code>edge://settings/privacy</code> → 跟踪防护 → 选「基本」或在「例外」添加 <code>api.github.com</code>、<code>clouderdream.github.io</code>。</p>
     </details>
 
     <p class="login-back"><a href="<%= u('/') %>">← 返回站点</a></p>

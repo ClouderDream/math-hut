@@ -45,6 +45,26 @@
     err.hidden = false;
   }
 
+  /* 把每一步结果写到登录卡片的暗色日志里，方便排查 */
+  var LOG_KEYS = [];
+  function log(msg, level) {
+    var box = $('loginLog');
+    if (!box) return;
+    box.classList.add('show');
+    var d = new Date();
+    var ts = d.toTimeString().slice(0, 8);
+    var span = document.createElement('div');
+    var cls = level === 'err' ? 'log-err' : level === 'ok' ? 'log-ok' : '';
+    span.className = cls;
+    span.textContent = '[' + ts + '] ' + msg;
+    box.appendChild(span);
+    box.scrollTop = box.scrollHeight;
+  }
+  function clearLog() {
+    var box = $('loginLog');
+    if (box) { box.innerHTML = ''; box.classList.remove('show'); }
+  }
+
   /* ---------------- Markdown 预览 ---------------- */
   var md = null;
   try {
@@ -410,16 +430,22 @@
 
     tryAutoLogin();
 
+    log('页面就绪，构建版本 mtsXX');
+
     // 网络自检：登录前先探测 api.github.com 是否可达，避免卡在「验证中…」
     (function () {
       var ctl = new AbortController();
       var t = setTimeout(function () { ctl.abort(); }, 8000);
+      log('网络自检：探测 https://api.github.com/（8s 超时）…');
       fetch('https://api.github.com/', { method: 'GET', signal: ctl.signal })
         .then(function (res) { clearTimeout(t); return res.status; })
         .catch(function () { clearTimeout(t); return 0; })
         .then(function (st) {
           if (!st) {
             setLoginError('⚠️ 当前浏览器无法访问 api.github.com，登录会卡住。请检查网络/代理，或关闭拦截类浏览器插件后重试。', true);
+            log('网络自检：不可达 ❌', 'err');
+          } else {
+            log('网络自检：可达（HTTP ' + st + '）', 'ok');
           }
         });
     })();
@@ -436,34 +462,66 @@
       var pass = $('passInput').value;
       var token = $('tokenInput').value.trim();
       if (!pass || !token) { setLoginError('口令与 Token 都要填'); return; }
+      clearLog();
+      log('口令长度=' + pass.length + '，Token 长度=' + token.length + '（期望 40）');
       $('loginBtn').disabled = true;
       try {
         $('loginBtn').textContent = '① 校验口令…';
+        log('① 开始校验口令');
         var ok;
         try {
           ok = await withTimeout(checkPass(pass), 8000, '口令校验超时（8s）');
         } catch (e) { throw new Error('口令校验失败：' + e.message); }
-        if (!ok) { setLoginError('管理口令不正确'); return; }
+        if (!ok) { log('① 口令不正确', 'err'); setLoginError('管理口令不正确'); return; }
+        log('① 口令正确', 'ok');
 
         $('loginBtn').textContent = '② 校验 Token…';
+        log('② 调用 GitHub /repos/ClouderDream/math-hut 验证 Token（最多 15s）');
         window.GH.setToken(token, $('remember').checked);
         try {
-          await withTimeout(window.GH.verify(), 15000, '');
+          await withTimeout(window.GH.verify(), 15000, 'Token 校验超时（15s）');
+          log('② Token 有效（仓库可访问）', 'ok');
         } catch (e) {
           var status = e.status || 0;
           var tip = status === 401 || status === 403
             ? 'Token 无效或权限不足。请确认：① 没有复制多余空格；② Token 已勾选 repo（Classic）或 Contents 读写（Fine-grained）；③ Token 未过期。'
             : '无法连接 GitHub：' + (e.message || ('HTTP ' + status))
-              + '<br>若你所在网络访问 api.github.com 不畅（或被浏览器插件拦截），换网络/关闭插件后重试。';
+              + '<br>若你用 Edge：edge://settings/privacy → 跟踪防护 → 选「基本」或在例外添加 api.github.com / clouderdream.github.io 后重试。';
+          log('② 失败 status=' + status + ' msg=' + (e.message || ''), 'err');
           throw new Error(tip);
         }
 
         $('loginBtn').textContent = '③ 载入后台…';
+        log('③ 进入后台');
         showApp();
       } catch (e) {
         setLoginError(e.message || '登录失败', true);
         window.GH.clearToken();
       } finally { $('loginBtn').disabled = false; $('loginBtn').textContent = '进入后台'; }
+    });
+
+    /* 仅测试 Token 是否能访问 api.github.com（不校验口令） */
+    $('testTokenBtn').addEventListener('click', async function () {
+      var token = $('tokenInput').value.trim();
+      var out = $('testResult');
+      out.hidden = false;
+      out.textContent = '正在请求 https://api.github.com/user …';
+      if (!token) { out.textContent = '请先填入 Token。'; return; }
+      try {
+        var ctl = new AbortController();
+        var t = setTimeout(function () { ctl.abort(); }, 12000);
+        var res = await fetch('https://api.github.com/user', {
+          method: 'GET',
+          headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' },
+          signal: ctl.signal,
+        });
+        clearTimeout(t);
+        var body = '';
+        try { body = (await res.json()).login || (await res.clone().text()).slice(0, 200); } catch (e) {}
+        out.textContent = 'HTTP ' + res.status + '\nlogin: ' + body + (res.status === 200 ? '\n✅ Token 有效' : '\n❌ 失败：' + (body || ('HTTP ' + res.status)));
+      } catch (e) {
+        out.textContent = '❌ 请求失败：' + e.message + '\n（典型原因：网络/代理拦截、Edge 跟踪防护、CORS 失败、Token 为空）';
+      }
     });
 
     document.querySelectorAll('.tab').forEach(function (t) {
