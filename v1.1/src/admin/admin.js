@@ -349,10 +349,13 @@
   function switchTab(name) {
     state.mode = name;
     document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === name); });
-    ['articles', 'pages', 'media', 'settings'].forEach(function (n) {
-      var el = n === 'pages' ? $('tab-articles') : $('tab-' + n);
-      if (el) el.hidden = !(n === name || (name === 'pages' && n === 'articles'));
+    // 「文章」与「页面」共用 #tab-articles 编辑区，其余各自独立
+    ['media', 'settings'].forEach(function (n) {
+      var el = $('tab-' + n);
+      if (el) el.hidden = n !== name;
     });
+    var editor = $('tab-articles');
+    if (editor) editor.hidden = !(name === 'articles' || name === 'pages');
     var isEditor = name === 'articles' || name === 'pages';
     $('newBtn').hidden = !isEditor;
     $('listSearch').hidden = !isEditor;
@@ -368,7 +371,20 @@
   function showApp() {
     $('loginView').hidden = true;
     $('appView').hidden = false;
+    var editor = $('tab-articles');
+    if (editor) editor.hidden = false;
     switchTab('articles');
+  }
+
+  /* 捕获未处理异常，避免「点了没反应」的静默卡死 */
+  function fatal(msg) {
+    var box = $('loginError');
+    if (box && $('loginView') && !$('loginView').hidden) {
+      box.textContent = '出错了：' + msg;
+      box.hidden = false;
+    }
+    var st = $('status');
+    if (st) { st.textContent = '出错了：' + msg; st.className = 'status error'; }
   }
   async function tryAutoLogin() {
     if (!window.GH.getToken()) return;
@@ -377,6 +393,11 @@
 
   /* ---------------- 初始化 ---------------- */
   document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('error', function (ev) { fatal(ev.message || '未知错误'); });
+    window.addEventListener('unhandledrejection', function (ev) {
+      fatal((ev.reason && ev.reason.message) || String(ev.reason));
+    });
+
     tryAutoLogin();
 
     $('tokenToggle').addEventListener('click', function () {
