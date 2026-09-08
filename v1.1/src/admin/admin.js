@@ -29,6 +29,16 @@
     return await sha256((H.passSalt || '') + pw) === H.passHash;
   }
 
+  /** 给任意 Promise 加超时，防止界面永久停在「验证中…」 */
+  function withTimeout(p, ms, msg) {
+    return Promise.race([
+      p,
+      new Promise(function (_, reject) {
+        setTimeout(function () { reject(new Error(msg || ('超时（' + (ms / 1000) + 's）'))); }, ms);
+      }),
+    ]);
+  }
+
   function setLoginError(msg, html) {
     var err = $('loginError');
     err[html ? 'innerHTML' : 'textContent'] = msg;
@@ -400,6 +410,20 @@
 
     tryAutoLogin();
 
+    // 网络自检：登录前先探测 api.github.com 是否可达，避免卡在「验证中…」
+    (function () {
+      var ctl = new AbortController();
+      var t = setTimeout(function () { ctl.abort(); }, 8000);
+      fetch('https://api.github.com/', { method: 'GET', signal: ctl.signal })
+        .then(function (res) { clearTimeout(t); return res.status; })
+        .catch(function () { clearTimeout(t); return 0; })
+        .then(function (st) {
+          if (!st) {
+            setLoginError('⚠️ 当前浏览器无法访问 api.github.com，登录会卡住。请检查网络/代理，或关闭拦截类浏览器插件后重试。', true);
+          }
+        });
+    })();
+
     $('tokenToggle').addEventListener('click', function () {
       var input = $('tokenInput');
       input.type = input.type === 'password' ? 'text' : 'password';
@@ -412,23 +436,30 @@
       var pass = $('passInput').value;
       var token = $('tokenInput').value.trim();
       if (!pass || !token) { setLoginError('口令与 Token 都要填'); return; }
-      $('loginBtn').disabled = true; $('loginBtn').textContent = '验证中…';
+      $('loginBtn').disabled = true;
       try {
-        var ok = await checkPass(pass);
+        $('loginBtn').textContent = '① 校验口令…';
+        var ok;
+        try {
+          ok = await withTimeout(checkPass(pass), 8000, '口令校验超时（8s）');
+        } catch (e) { throw new Error('口令校验失败：' + e.message); }
         if (!ok) { setLoginError('管理口令不正确'); return; }
+
+        $('loginBtn').textContent = '② 校验 Token…';
         window.GH.setToken(token, $('remember').checked);
-      try {
-        await window.GH.verify();
-      } catch (e) {
-        var status = e.status || 0;
-        var tip = status === 401 || status === 403
-          ? 'Token 无效或权限不足。请确认：① 没有复制多余空格；② Token 已勾选 repo（Classic）或 Contents 读写（Fine-grained）；③ Token 未过期。'
-          : status === 0
-          ? '无法连接 GitHub：' + (e.message || '网络请求失败')
-          : '无法连接 GitHub 校验 Token：' + (e.message || ('HTTP ' + status));
-        throw new Error(tip);
-      }
-      showApp();
+        try {
+          await withTimeout(window.GH.verify(), 15000, '');
+        } catch (e) {
+          var status = e.status || 0;
+          var tip = status === 401 || status === 403
+            ? 'Token 无效或权限不足。请确认：① 没有复制多余空格；② Token 已勾选 repo（Classic）或 Contents 读写（Fine-grained）；③ Token 未过期。'
+            : '无法连接 GitHub：' + (e.message || ('HTTP ' + status))
+              + '<br>若你所在网络访问 api.github.com 不畅（或被浏览器插件拦截），换网络/关闭插件后重试。';
+          throw new Error(tip);
+        }
+
+        $('loginBtn').textContent = '③ 载入后台…';
+        showApp();
       } catch (e) {
         setLoginError(e.message || '登录失败', true);
         window.GH.clearToken();
