@@ -69,7 +69,7 @@ module.exports = {
     // 生成方法：在项目目录运行  npm run hash-password 你的口令
     // 然后把下面两行替换成命令输出的结果。
     // ⚠️ 这只是"防误点"的门槛，不是安全措施；真正的安全边界是 GitHub Token。
-    passHash: '5f4dcc3b5aa765d61d8327deb882cf99b7a67d1e3a2d5b0e5f1a4e0f6a5b3c2d',
+    passHash: 'df47b8b4abd97a1dcc76397bf1259af0ae6ba9a3934bbfd8d4294a8369f9303b',
     passSalt: 'change-me',
   },
 
