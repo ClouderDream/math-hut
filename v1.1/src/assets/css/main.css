@@ -160,6 +160,9 @@ img { max-width: 100%; }
 }
 .main-nav { display: flex; list-style: none; margin: 0; padding: 0; flex: 1; flex-wrap: wrap; }
 .main-nav > li { position: relative; }
+/* 默认也给 has-sub 一个层级，使其子菜单的 z-index 不会溢出到导航栏层级，
+   从而保证「当前悬停项」的面板始终盖在相邻面板之上 */
+.main-nav > li.has-sub { z-index: 1; }
 .main-nav > li.has-sub:hover { z-index: 100; }
 .main-nav > li > a, .main-nav > li > .nav-toggle {
   display: block;
