@@ -45,16 +45,31 @@
   }
 
   async function req(url, options) {
-    var res = await fetch(url, options);
-    var json = null;
-    try { json = await res.json(); } catch (e) {}
-    if (!res.ok) {
-      var msg = (json && json.message) || ('HTTP ' + res.status);
-      var err = new Error(msg);
-      err.status = res.status;
-      throw err;
+    options = options || {};
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 20000);
+    options.signal = controller.signal;
+    try {
+      var res = await fetch(url, options);
+      clearTimeout(timer);
+      var json = null;
+      try { json = await res.json(); } catch (e) {}
+      if (!res.ok) {
+        var msg = (json && json.message) || ('HTTP ' + res.status);
+        var err = new Error(msg);
+        err.status = res.status;
+        throw err;
+      }
+      return json;
+    } catch (e) {
+      clearTimeout(timer);
+      if (e.name === 'AbortError') {
+        var toErr = new Error('请求超时（20s），请检查网络连接或稍后重试');
+        toErr.status = 0;
+        throw toErr;
+      }
+      throw e;
     }
-    return json;
   }
 
   var base = function () { return API + '/repos/' + H.owner + '/' + H.repo + '/contents/'; };

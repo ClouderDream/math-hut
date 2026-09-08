@@ -396,16 +396,18 @@
         var ok = await checkPass(pass);
         if (!ok) { setLoginError('管理口令不正确'); return; }
         window.GH.setToken(token, $('remember').checked);
-        try {
-          await window.GH.verify();
-        } catch (e) {
-          var status = e.status || 0;
-          var tip = status === 401 || status === 403
-            ? 'Token 无效或权限不足。请确认：① 没有复制多余空格；② Token 已勾选 repo（Classic）或 Contents 读写（Fine-grained）；③ Token 未过期。'
-            : '无法连接 GitHub 校验 Token：' + (e.message || ('HTTP ' + status));
-          throw new Error(tip);
-        }
-        showApp();
+      try {
+        await window.GH.verify();
+      } catch (e) {
+        var status = e.status || 0;
+        var tip = status === 401 || status === 403
+          ? 'Token 无效或权限不足。请确认：① 没有复制多余空格；② Token 已勾选 repo（Classic）或 Contents 读写（Fine-grained）；③ Token 未过期。'
+          : status === 0
+          ? '无法连接 GitHub：' + (e.message || '网络请求失败')
+          : '无法连接 GitHub 校验 Token：' + (e.message || ('HTTP ' + status));
+        throw new Error(tip);
+      }
+      showApp();
       } catch (e) {
         setLoginError(e.message || '登录失败', true);
         window.GH.clearToken();

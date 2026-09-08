@@ -46,8 +46,12 @@
 
       <li><a href="<%= u('archive/') %>" class="<%= currentPath === u('archive/') ? 'active' : '' %>">归档</a></li>
       <li><a href="<%= u('about/') %>" class="<%= currentPath === u('about/') ? 'active' : '' %>">关于</a></li>
-      <li><a href="<%= u('search/') %>" class="<%= currentPath === u('search/') ? 'active' : '' %>">搜索</a></li>
     </ul>
+
+    <form class="nav-search" action="<%= u('search/') %>" method="get" role="search" aria-label="站内搜索">
+      <input type="search" name="q" placeholder="搜索…" autocomplete="off" aria-label="搜索关键词">
+      <button type="submit" aria-label="搜索">搜</button>
+    </form>
 
     <div class="nav-actions">
       <button class="icon-btn" type="button" id="themeToggle" aria-label="切换明暗主题" title="切换主题">
