@@ -147,6 +147,9 @@ img { max-width: 100%; }
   border-top: none;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(8px);
+  /* 关键：导航栏需自成高层级，保证下拉菜单完整覆盖下方内容卡片 */
+  position: relative;
+  z-index: 200;
 }
 .nav-inner {
   max-width: var(--wrap);
@@ -188,8 +191,10 @@ img { max-width: 100%; }
   list-style: none;
   margin: 0; padding: 4px 0;
   min-width: 180px;
-  z-index: 50;
-  box-shadow: 0 2px 6px rgba(0,0,0,.18);
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
 }
 .has-sub:hover > .sub-menu { display: block; }
 .sub-menu li a {
