@@ -430,7 +430,7 @@
 
     tryAutoLogin();
 
-    log('页面就绪，构建版本 mtsXX');
+    log('页面就绪，构建版本 ' + ((document.querySelector('.login-version') || {}).textContent || '?').replace('构建版本','').trim());
 
     // 网络自检：登录前先探测 api.github.com 是否可达，避免卡在「验证中…」
     (function () {
