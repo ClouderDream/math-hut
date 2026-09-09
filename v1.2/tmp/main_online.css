@@ -280,8 +280,7 @@ img { max-width: 100%; }
   max-width: var(--wrap);
   margin: 24px auto 40px;
   padding: 0 24px;
-  display: grid;
-  grid-template-columns: 1fr var(--sidebar);
+  display: flex;
   gap: var(--gap);
   align-items: stretch;
 }
@@ -301,12 +300,8 @@ img { max-width: 100%; }
   padding: 0 24px;
 }
 
-/* 文章详情页：左侧目录 + 正文（无右侧 sidebar），保持 flex 以便目录 sticky */
-.layout-post {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--gap);
-}
+/* 文章详情页：左侧目录 + 正文（无右侧 sidebar） */
+.layout-post { align-items: flex-start; }
 .layout-post .post-content {
   flex: 1;
   min-width: 0;
@@ -365,15 +360,16 @@ img { max-width: 100%; }
 }
 
 .sidebar {
+  flex: 0 0 var(--sidebar);
   background: var(--bg-sidebar);
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   font-size: 14px;
   box-shadow: var(--shadow);
-  min-width: 0;
 }
 .content {
+  flex: 1;
   min-width: 0;
   background: var(--bg-content);
   border: 1px solid var(--border);
@@ -384,8 +380,8 @@ img { max-width: 100%; }
 .content:hover { box-shadow: var(--shadow-hover); }
 
 @media (max-width: 720px) {
-  .layout { grid-template-columns: 1fr; padding: 0 12px; }
-  .sidebar, .content { width: 100%; }
+  .layout { flex-direction: column; padding: 0 12px; }
+  .sidebar, .content { flex: none; width: 100%; }
   .content { padding: 18px; }
 }
 
