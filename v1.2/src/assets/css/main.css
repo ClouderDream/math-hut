@@ -282,8 +282,10 @@ img { max-width: 100%; }
   padding: 0 24px;
   display: flex;
   gap: var(--gap);
-  align-items: flex-start;
+  align-items: stretch;
 }
+.layout .content,
+.layout .sidebar { min-height: 100%; }
 .layout-full {
   max-width: var(--wrap);
   margin: 24px auto 40px;
