@@ -604,41 +604,58 @@
 .symbol-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
-  padding: 10px 12px;
+  padding: 8px 10px;
   margin: 0 0 14px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #fff;
+  background: var(--admin-panel);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  font-size: 13px;
 }
 .symbol-bar .symbol-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255,255,255,.85);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--admin-muted);
   margin-right: 6px;
-  letter-spacing: .03em;
+  letter-spacing: .04em;
   text-transform: uppercase;
 }
 .symbol-bar .sym {
-  min-width: 30px;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid rgba(255,255,255,.25);
-  background: rgba(255,255,255,.1);
-  color: #fff;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   border-radius: 5px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
-  font-family: "Times New Roman", Georgia, serif;
-  transition: background .12s, border-color .12s, transform .05s;
+  font-family: "Times New Roman", Georgia, "Noto Serif", serif;
+  transition: background .12s, border-color .12s, transform .05s, color .12s;
 }
-.symbol-bar .sym:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.4); }
+.symbol-bar .sym:hover {
+  background: var(--admin-primary-light);
+  border-color: var(--admin-primary);
+  color: var(--admin-primary);
+}
 .symbol-bar .sym:active { transform: scale(0.92); }
-.symbol-bar .sym.sym-action { font-family: var(--admin-font); font-size: 12px; min-width: 36px; }
+.symbol-bar .sym.sym-action {
+  font-family: var(--admin-font);
+  font-size: 11px;
+  min-width: 30px;
+  font-weight: 600;
+}
 .symbol-bar .sym.sym-action b { font-weight: 800; }
 .symbol-bar .sym.sym-action i { font-style: italic; }
+.symbol-bar .symbol-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--admin-border);
+  margin: 0 4px;
+}
 
 /* ---------------- 拖拽上传 ---------------- */
 .dropzone {

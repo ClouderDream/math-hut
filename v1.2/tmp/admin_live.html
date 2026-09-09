@@ -7,12 +7,12 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>后台管理 · <%= site.title %></title>
-<link rel="icon" href="<%= u('assets/img/favicon.svg') %>" type="image/svg+xml">
-<link rel="stylesheet" href="<%= u('assets/css/admin.css') %>?v=<%= v %>">
-<link rel="stylesheet" href="<%= u('assets/css/main.css') %>?v=<%= v %>">
-<link rel="stylesheet" href="<%= u('assets/css/code.css') %>?v=<%= v %>">
-<link rel="stylesheet" href="<%= u('admin/vendor/katex.min.css') %>?v=<%= v %>">
+<title>后台管理 · 云梦的数理小屋</title>
+<link rel="icon" href="/math-hut/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/math-hut/assets/css/admin.css?v=mttq6004">
+<link rel="stylesheet" href="/math-hut/assets/css/main.css?v=mttq6004">
+<link rel="stylesheet" href="/math-hut/assets/css/code.css?v=mttq6004">
+<link rel="stylesheet" href="/math-hut/admin/vendor/katex.min.css?v=mttq6004">
 <script>
 (function(){try{var t=localStorage.getItem('theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
@@ -24,7 +24,7 @@
   <form class="login-card" id="loginForm">
     <div class="brand">
       <div class="brand-icon">&Sigma;</div>
-      <h1 class="login-title"><%= site.title %></h1>
+      <h1 class="login-title">云梦的数理小屋</h1>
       <p class="login-subtitle">后台管理</p>
     </div>
 
@@ -68,8 +68,8 @@
       <p class="warn">⚠️ Edge 浏览器「跟踪防护」可能拦截 api.github.com：<code>edge://settings/privacy</code> → 跟踪防护 → 选「基本」或在「例外」添加 <code>api.github.com</code>、<code>clouderdream.github.io</code>。</p>
     </details>
 
-    <p class="login-back"><a href="<%= u('/') %>">← 返回站点</a></p>
-    <p class="login-version">构建版本 <%= v %></p>
+    <p class="login-back"><a href="/math-hut/">← 返回站点</a></p>
+    <p class="login-version">构建版本 mttq6004</p>
   </form>
 </section>
 
@@ -163,36 +163,33 @@
         <button type="button" class="sym" data-insert="∫" data-wrap="_{ }^{ }" title="积分 ∫">∫</button>
         <button type="button" class="sym" data-insert="∏" data-wrap="_{ }^{ }" title="连乘 ∏">∏</button>
         <button type="button" class="sym" data-insert="√" data-wrap="{}" title="根号 √">√</button>
-        <button type="button" class="sym" data-insert="\frac" data-wrap="{}{}" title="分数">a⁄b</button>
-        <button type="button" class="sym" data-insert="\partial" data-wrap="" title="偏导 ∂">∂</button>
-        <button type="button" class="sym" data-insert="\nabla" data-wrap="" title="梯度 ∇">∇</button>
-        <button type="button" class="sym" data-insert="\infty" data-wrap="" title="无穷 ∞">∞</button>
-        <button type="button" class="sym" data-insert="\to" data-wrap="" title="→">→</button>
-        <button type="button" class="sym" data-insert="\Rightarrow" data-wrap="" title="⇒">⇒</button>
-        <button type="button" class="sym" data-insert="\Leftrightarrow" data-wrap="" title="⇔">⇔</button>
-        <button type="button" class="sym" data-insert="\le" data-wrap="" title="≤">≤</button>
-        <button type="button" class="sym" data-insert="\ge" data-wrap="" title="≥">≥</button>
-        <button type="button" class="sym" data-insert="\neq" data-wrap="" title="≠">≠</button>
-        <button type="button" class="sym" data-insert="\approx" data-wrap="" title="≈">≈</button>
-        <button type="button" class="sym" data-insert="\pm" data-wrap="" title="±">±</button>
-        <button type="button" class="sym" data-insert="\times" data-wrap="" title="×">×</button>
-        <button type="button" class="sym" data-insert="\div" data-wrap="" title="÷">÷</button>
-        <button type="button" class="sym" data-insert="\cdot" data-wrap="" title="·">·</button>
-        <button type="button" class="sym" data-insert="\alpha" data-wrap="" title="α">α</button>
-        <button type="button" class="sym" data-insert="\beta" data-wrap="" title="β">β</button>
-        <button type="button" class="sym" data-insert="\gamma" data-wrap="" title="γ">γ</button>
-        <button type="button" class="sym" data-insert="\delta" data-wrap="" title="δ">δ</button>
-        <button type="button" class="sym" data-insert="\theta" data-wrap="" title="θ">θ</button>
-        <button type="button" class="sym" data-insert="\lambda" data-wrap="" title="λ">λ</button>
-        <button type="button" class="sym" data-insert="\mu" data-wrap="" title="μ">μ</button>
-        <button type="button" class="sym" data-insert="\pi" data-wrap="" title="π">π</button>
-        <button type="button" class="sym" data-insert="\sigma" data-wrap="" title="σ">σ</button>
-        <button type="button" class="sym" data-insert="\phi" data-wrap="" title="φ">φ</button>
-        <button type="button" class="sym" data-insert="\omega" data-wrap="" title="ω">ω</button>
-        <button type="button" class="sym" data-insert="\hbar" data-wrap="" title="ℏ">ℏ</button>
-        <span class="symbol-sep"></span>
-        <button type="button" class="sym sym-action" id="inlineImageBtn" title="上传并插入正文图片">🖼️</button>
-        <input type="file" id="inlineImageInput" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" hidden>
+        <button type="button" class="sym" data-insert="\\frac" data-wrap="{}{}" title="分数">a⁄b</button>
+        <button type="button" class="sym" data-insert="\\partial" data-wrap="" title="偏导 ∂">∂</button>
+        <button type="button" class="sym" data-insert="\\nabla" data-wrap="" title="梯度 ∇">∇</button>
+        <button type="button" class="sym" data-insert="\\infty" data-wrap="" title="无穷 ∞">∞</button>
+        <button type="button" class="sym" data-insert="\\to" data-wrap="" title="→">→</button>
+        <button type="button" class="sym" data-insert="\\Rightarrow" data-wrap="" title="⇒">⇒</button>
+        <button type="button" class="sym" data-insert="\\Leftrightarrow" data-wrap="" title="⇔">⇔</button>
+        <button type="button" class="sym" data-insert="\\le" data-wrap="" title="≤">≤</button>
+        <button type="button" class="sym" data-insert="\\ge" data-wrap="" title="≥">≥</button>
+        <button type="button" class="sym" data-insert="\\neq" data-wrap="" title="≠">≠</button>
+        <button type="button" class="sym" data-insert="\\approx" data-wrap="" title="≈">≈</button>
+        <button type="button" class="sym" data-insert="\\pm" data-wrap="" title="±">±</button>
+        <button type="button" class="sym" data-insert="\\times" data-wrap="" title="×">×</button>
+        <button type="button" class="sym" data-insert="\\div" data-wrap="" title="÷">÷</button>
+        <button type="button" class="sym" data-insert="\\cdot" data-wrap="" title="·">·</button>
+        <button type="button" class="sym" data-insert="\\alpha" data-wrap="" title="α">α</button>
+        <button type="button" class="sym" data-insert="\\beta" data-wrap="" title="β">β</button>
+        <button type="button" class="sym" data-insert="\\gamma" data-wrap="" title="γ">γ</button>
+        <button type="button" class="sym" data-insert="\\delta" data-wrap="" title="δ">δ</button>
+        <button type="button" class="sym" data-insert="\\theta" data-wrap="" title="θ">θ</button>
+        <button type="button" class="sym" data-insert="\\lambda" data-wrap="" title="λ">λ</button>
+        <button type="button" class="sym" data-insert="\\mu" data-wrap="" title="μ">μ</button>
+        <button type="button" class="sym" data-insert="\\pi" data-wrap="" title="π">π</button>
+        <button type="button" class="sym" data-insert="\\sigma" data-wrap="" title="σ">σ</button>
+        <button type="button" class="sym" data-insert="\\phi" data-wrap="" title="φ">φ</button>
+        <button type="button" class="sym" data-insert="\\omega" data-wrap="" title="ω">ω</button>
+        <button type="button" class="sym" data-insert="\\hbar" data-wrap="" title="ℏ">ℏ</button>
         <button type="button" class="sym sym-action" data-insert="$$" data-wrap="\n" title="行间公式块">$$…$$</button>
         <button type="button" class="sym sym-action" data-insert="$" data-wrap=" $ $ " title="行内公式">$…$</button>
         <button type="button" class="sym sym-action" data-insert="```\n" data-wrap="\n```" title="代码块">```</button>
@@ -266,11 +263,11 @@
   </main>
 </section>
 
-<script src="<%= u('admin/vendor/markdown-it.min.js') %>?v=<%= v %>"></script>
-<script src="<%= u('admin/vendor/katex.min.js') %>?v=<%= v %>"></script>
-<script src="<%= u('admin/vendor/md-math.js') %>?v=<%= v %>"></script>
-<script src="<%= u('admin/config.js') %>?v=<%= v %>"></script>
-<script src="<%= u('admin/github.js') %>?v=<%= v %>"></script>
-<script src="<%= u('admin/admin.js') %>?v=<%= v %>"></script>
+<script src="/math-hut/admin/vendor/markdown-it.min.js?v=mttq6004"></script>
+<script src="/math-hut/admin/vendor/katex.min.js?v=mttq6004"></script>
+<script src="/math-hut/admin/vendor/md-math.js?v=mttq6004"></script>
+<script src="/math-hut/admin/config.js?v=mttq6004"></script>
+<script src="/math-hut/admin/github.js?v=mttq6004"></script>
+<script src="/math-hut/admin/admin.js?v=mttq6004"></script>
 </body>
 </html>

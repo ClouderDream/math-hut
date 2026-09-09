@@ -398,55 +398,51 @@
   }
 
   /* ---------------- 常用符号工具栏 ---------------- */
-  function insertAtCursor(textarea, text) {
+  function isInsideMath(text, pos) {
+    var count = 0;
+    for (var i = 0; i < pos; i++) {
+      if (text[i] === '$' && (i === 0 || text[i - 1] !== '\\')) count++;
+    }
+    return count % 2 === 1;
+  }
+  function insertAtCursor(textarea, text, cursorOffset) {
     textarea.focus();
     var start = textarea.selectionStart, end = textarea.selectionEnd;
     var v = textarea.value;
     textarea.value = v.slice(0, start) + text + v.slice(end);
-    var pos = start + text.length;
+    var pos = start + (cursorOffset !== undefined ? cursorOffset : text.length);
     textarea.setSelectionRange(pos, pos);
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
   }
   function insertSymbol(btn) {
-    var ta = $('fBody');
-    if (!ta) return;
+    var ta = $('fBody'); if (!ta) return;
     var ins = btn.getAttribute('data-insert') || '';
     var wrap = btn.getAttribute('data-wrap') || '';
-    var before = ins, after = '';
+    var start = ta.selectionStart, end = ta.selectionEnd;
+    var selected = ta.value.slice(start, end) || '';
+    var text = ins, cursorOffset;
+
     if (wrap) {
-      // 简单解析占位符：依次用选中内容填入 {}（按出现顺序）
-      var selected = ta.value.slice(ta.selectionStart, ta.selectionEnd) || '';
-      var tokens = wrap.match(/\{[^}]*\}/g) || [];
-      var used = 0, replaced = wrap;
-      if (selected && tokens.length) {
-        replaced = replaced.replace(/\{[^}]*\}/, selected);
-        // 剩余占位符保留，光标放在第一个剩余占位符处
-        var remaining = replaced.match(/\{[^}]*\}/);
-        if (remaining) {
-          var idx = replaced.indexOf(remaining[0]);
-          after = replaced.slice(idx + remaining[0].length);
-          before = replaced.slice(0, idx) + (ins ? ins : '');
-          ins = '';
-        }
+      var placeholders = wrap.match(/\{[^}]*\}/g) || [];
+      if (selected && placeholders.length) {
+        var used = false;
+        text = ins + wrap.replace(/\{[^}]*\}/g, function (m) { return used ? m : (used = true, selected); });
+        var remaining = text.match(/\{[^}]*\}/);
+        if (remaining) cursorOffset = text.indexOf(remaining[0]) + 1;
       } else {
-        // 没有选中：把第一个占位符去掉，剩余的占位符作为可编辑位置
-        var first = wrap.match(/\{[^}]*\}/);
-        if (first) {
-          var cleaned = wrap.replace(first[0], '');
-          before = (ins || '') + cleaned.slice(0, cleaned.indexOf(first[0]) >= 0 ? cleaned : cleaned);
-          after = cleaned;
-          // 光标定位在第一个原占位符的位置
-          ins = '';
-        }
-      }
-      // 简化处理：如果没有选中，只在光标处插入 ins + wrap
-      if (selected && tokens.length) {
-        insertAtCursor(ta, before);
-        ta.setSelectionRange(ta.selectionStart - (before.length - (ins ? ins.length : 0)), ta.selectionEnd - (before.length - (ins ? ins.length : 0)));
-        return;
+        text = ins + wrap;
+        var first = text.match(/\{[^}]*\}/);
+        if (first) cursorOffset = text.indexOf(first[0]) + 1;
       }
     }
-    insertAtCursor(ta, ins);
+
+    // LaTeX 命令如果不在 $...$ 内，自动包裹，避免裸字出现在正文
+    if (/^\\[a-zA-Z]+/.test(text) && !isInsideMath(ta.value, start)) {
+      text = '$' + text + '$';
+      cursorOffset = cursorOffset !== undefined ? cursorOffset + 1 : text.length - 1;
+    }
+
+    insertAtCursor(ta, text, cursorOffset);
   }
 
   /* ---------------- 导出 PDF ---------------- */
@@ -509,6 +505,43 @@
           return;
         }
         uploadImage(f);
+      });
+    });
+  }
+
+  /* ---------------- 正文插图上传 ---------------- */
+  async function uploadInlineImage(file) {
+    setStatus('status', '上传 ' + file.name + '…');
+    try {
+      var buf = await file.arrayBuffer();
+      var path = H.imagesDir + '/' + file.name;
+      var sha = null;
+      try { var r = await window.GH.read(path); sha = r.sha; } catch (e) {}
+      await window.GH.saveBinary(path, arrToB64(buf), sha, (sha ? '更新图片：' : '新增图片：') + file.name);
+      await loadMedia();
+      return 'images/' + file.name;
+    } catch (e) { setStatus('status', '上传失败：' + e.message, true); throw e; }
+  }
+  async function insertInlineImage(file) {
+    var path = await uploadInlineImage(file);
+    var alt = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+    insertAtCursor($('fBody'), '![' + alt + '](' + path + ')');
+    setStatus('status', '✅ 已插入图片：' + path, false);
+    state.dirty = true;
+    renderPreview();
+  }
+  function bindInlineImageDrop() {
+    var ta = $('fBody'); if (!ta) return;
+    var prevent = function (e) { e.preventDefault(); e.stopPropagation(); };
+    ta.addEventListener('dragover', prevent);
+    ta.addEventListener('drop', function (e) {
+      prevent(e);
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || !files.length) return;
+      Array.prototype.forEach.call(files, function (f) {
+        if (!isImageFile(f)) { setStatus('status', '跳过非图片：' + f.name, true); return; }
+        if (f.size > 5 * 1024 * 1024) { setStatus('status', '跳过过大（>5MB）：' + f.name, true); return; }
+        insertInlineImage(f);
       });
     });
   }
@@ -688,6 +721,13 @@
 
     // 拖拽上传
     bindDropzone();
+    bindInlineImageDrop();
+
+    $('inlineImageBtn').addEventListener('click', function () { $('inlineImageInput').click(); });
+    $('inlineImageInput').addEventListener('change', function (ev) {
+      Array.prototype.forEach.call(ev.target.files || [], function (f) { insertInlineImage(f); });
+      ev.target.value = '';
+    });
 
     $('uploadInput').addEventListener('change', function (ev) {
       Array.prototype.forEach.call(ev.target.files || [], function (f) {
