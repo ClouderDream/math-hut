@@ -64,11 +64,11 @@ module.exports = {
     owner: 'ClouderDream',
     repo: 'math-hut',
     branch: 'main',
-    // 注意：博客在 v1.1/ 子目录，后台读写必须带前缀
-    postsDir: 'v1.1/content/posts',
-    pagesDir: 'v1.1/content/pages',
-    imagesDir: 'v1.1/content/images',
-    siteConfigPath: 'v1.1/content/site.json',
+    // 注意：博客在 v1.2/ 子目录，后台读写必须带前缀
+    postsDir: 'v1.2/content/posts',
+    pagesDir: 'v1.2/content/pages',
+    imagesDir: 'v1.2/content/images',
+    siteConfigPath: 'v1.2/content/site.json',
     // 管理口令的 SHA-256 哈希 + 盐。
     // 生成方法：在项目目录运行  npm run hash-password 你的口令
     // 然后把下面两行替换成命令输出的结果。
