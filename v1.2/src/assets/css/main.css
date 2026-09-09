@@ -285,7 +285,15 @@ img { max-width: 100%; }
   align-items: stretch;
 }
 .layout .content,
-.layout .sidebar { min-height: 100%; }
+.layout .sidebar { align-self: stretch; min-height: 100%; }
+
+/* 首页内容区：让文章列表自适应填充剩余空间，分页固定到底部 */
+.layout > .content {
+  display: flex;
+  flex-direction: column;
+}
+.layout > .content .post-list { flex: 1 1 auto; }
+.layout > .content .pagination { margin-top: auto; padding-top: 20px; }
 .layout-full {
   max-width: var(--wrap);
   margin: 24px auto 40px;
