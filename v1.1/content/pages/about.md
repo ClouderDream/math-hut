@@ -1,12 +1,11 @@
 ---
 title: "关于"
 date: 2026-09-07
-tags: ["关于"]
+tags: []
 summary: "关于「云梦的数理小屋」和作者的一点介绍。"
 slug: "about"
 draft: false
 ---
-
 ## 关于本站
 
 「云梦的数理小屋」是一个记录数学与物理学习笔记的地方。
@@ -34,6 +33,6 @@ draft: false
 ## 联系我
 
 - GitHub：<https://github.com/ClouderDream>（以上为占位示例，请替换成你的真实地址）
-- 邮箱：your-email@example.com（占位示例）
+- 邮箱：1583678048@qq.com
 
 发现问题或有想讨论的内容，欢迎通过上面的方式联系。
