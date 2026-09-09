@@ -283,18 +283,13 @@ img { max-width: 100%; }
   display: grid;
   grid-template-columns: 1fr var(--sidebar);
   gap: var(--gap);
-  align-items: stretch;
+  /* 自然高度、顶部对齐：避免「强制等高」导致较矮的一列在内部出现大块空白
+     （例如文章少的标签页/归档页）。这是博客主页最干净、最稳的排版。 */
+  align-items: start;
 }
 .layout .content,
-.layout .sidebar { align-self: stretch; min-height: 100%; }
+.layout .sidebar { align-self: auto; min-height: 0; }
 
-/* 首页内容区：让文章列表自适应填充剩余空间，分页固定到底部 */
-.layout > .content {
-  display: flex;
-  flex-direction: column;
-}
-.layout > .content .post-list { flex: 1 1 auto; }
-.layout > .content .pagination { margin-top: auto; padding-top: 20px; }
 .layout-full {
   max-width: var(--wrap);
   margin: 24px auto 40px;
