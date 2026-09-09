@@ -136,7 +136,7 @@ img { max-width: 100%; }
   max-height: 320px;
   object-fit: cover;
   border-radius: 6px;
-  margin: 0 0 22px;
+  margin: 0 0 18px;
   display: block;
 }
 
@@ -292,6 +292,65 @@ img { max-width: 100%; }
   padding: 0 24px;
 }
 
+/* 文章详情页：左侧目录 + 正文（无右侧 sidebar） */
+.layout-post { align-items: flex-start; }
+.layout-post .post-content {
+  flex: 1;
+  min-width: 0;
+}
+.toc-aside {
+  flex: 0 0 180px;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 12px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.toc-aside-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fg-strong);
+  letter-spacing: .04em;
+}
+.toc-aside-list { list-style: none; margin: 0; padding: 0; }
+.toc-aside-list ul { list-style: none; margin: 2px 0 0; padding-left: 10px; }
+.toc-aside-item { margin: 3px 0; }
+.toc-aside-item a {
+  display: block;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: var(--fg-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.toc-aside-item a:hover,
+.toc-aside-item a.active {
+  color: var(--link);
+  background: var(--primary-weak);
+  text-decoration: none;
+}
+.toc-aside-h2 > a { font-weight: 500; }
+.toc-aside-h3 > a { font-size: 12px; padding-left: 8px; }
+
+@media (max-width: 900px) {
+  .layout-post { flex-direction: column; }
+  .toc-aside {
+    position: static;
+    flex: none;
+    width: 100%;
+    max-height: none;
+    margin-bottom: 18px;
+  }
+}
+
 .sidebar {
   flex: 0 0 var(--sidebar);
   background: var(--bg-sidebar);
@@ -307,7 +366,7 @@ img { max-width: 100%; }
   background: var(--bg-content);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 24px 30px 36px;
+  padding: 20px 24px 28px;
   box-shadow: var(--shadow);
 }
 .content:hover { box-shadow: var(--shadow-hover); }
@@ -352,15 +411,15 @@ img { max-width: 100%; }
 .widget-body .widget-text a { color: var(--link); }
 
 /* ================ 内容区通用 ================ */
-.content-title { font-size: 22px; margin: 0 0 16px; color: var(--fg-strong); font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.content-subtitle { color: var(--fg-muted); margin: 0 0 18px; font-size: 14px; }
-.content-section { margin-bottom: 24px; }
+.content-title { font-size: 22px; margin: 0 0 12px; color: var(--fg-strong); font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.content-subtitle { color: var(--fg-muted); margin: 0 0 14px; font-size: 14px; }
+.content-section { margin-bottom: 20px; }
 .content-section h2 { font-size: 18px; margin: 0 0 10px; color: var(--fg-strong); }
 .content-section h3 { font-size: 15.5px; margin: 14px 0 8px; color: var(--fg-strong); }
 
 /* 文章卡片（首页列表） */
 .post-list-item {
-  padding: 20px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--border);
   position: relative;
 }
@@ -369,9 +428,9 @@ img { max-width: 100%; }
 .post-list-item::before {
   content: '';
   position: absolute;
-  left: -30px;
-  top: 22px;
-  bottom: 22px;
+  left: -24px;
+  top: 18px;
+  bottom: 18px;
   width: 4px;
   background: var(--primary);
   border-radius: 2px;
@@ -380,10 +439,10 @@ img { max-width: 100%; }
 }
 .post-list-item:first-child::before { top: 2px; }
 .post-list-item:hover::before { opacity: 1; }
-.post-list-item h3 { font-size: 18px; margin: 0 0 8px; line-height: 1.45; font-weight: 700; }
+.post-list-item h3 { font-size: 18px; margin: 0 0 7px; line-height: 1.45; font-weight: 700; }
 .post-list-item h3 a { color: var(--fg-strong); }
 .post-list-item h3 a:hover { color: var(--link); text-decoration: none; }
-.post-list-item .excerpt { color: var(--fg-muted); font-size: 14.5px; margin: 0 0 8px; line-height: 1.7; }
+.post-list-item .excerpt { color: var(--fg-muted); font-size: 14.5px; margin: 0 0 7px; line-height: 1.7; }
 .post-list-item .meta { font-size: 13px; color: var(--fg-faint); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .post-list-item .meta a { color: var(--link); font-weight: 500; }
 .post-list-item .meta a:hover { text-decoration: underline; }
@@ -392,7 +451,7 @@ img { max-width: 100%; }
 .tag-inline { display: inline-block; padding: 1px 7px; border-radius: 3px; background: var(--primary-weak); color: var(--link); font-size: 12px; margin: 0 2px; }
 
 /* 分页 */
-.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; flex-wrap: wrap; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
 .pagination a, .pagination span {
   padding: 7px 13px; border-radius: 6px; font-size: 13.5px;
   border: 1px solid var(--border); color: var(--fg-muted); background: var(--bg-content);
@@ -403,24 +462,24 @@ img { max-width: 100%; }
 .pagination .disabled { opacity: .4; cursor: default; }
 
 /* ================ 文章详情 ================ */
-.post-single header { border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 20px; }
-.post-single h1.post-title { font-size: 24px; margin: 0 0 8px; color: var(--fg-strong); line-height: 1.35; }
+.post-single header { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; }
+.post-single h1.post-title { font-size: 23px; margin: 0 0 8px; color: var(--fg-strong); line-height: 1.35; }
 .post-single .post-meta { font-size: 13px; color: var(--fg-faint); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .post-single .post-meta a { color: var(--link); }
 
-.post-body { font-size: 15.5px; line-height: 1.85; }
+.post-body { font-size: 15px; line-height: 1.75; }
 .post-body > *:first-child { margin-top: 0; }
-.post-body h2 { font-size: 19px; margin: 30px 0 12px; padding-bottom: 4px; border-bottom: 1px solid var(--border); color: var(--fg-strong); scroll-margin-top: 130px; }
-.post-body h3 { font-size: 16.5px; margin: 22px 0 10px; color: var(--fg-strong); scroll-margin-top: 130px; }
-.post-body h4 { font-size: 15px; margin: 18px 0 8px; }
-.post-body p { margin: 0 0 1.1em; }
-.post-body ul, .post-body ol { margin: 0 0 1.1em; padding-left: 1.6em; }
-.post-body li { margin: .3em 0; }
-.post-body blockquote { margin: 0 0 1.1em; padding: 4px 16px; border-left: 3px solid var(--border-strong); color: var(--fg-muted); }
-.post-body hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+.post-body h2 { font-size: 18px; margin: 24px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border); color: var(--fg-strong); scroll-margin-top: 130px; }
+.post-body h3 { font-size: 16px; margin: 18px 0 8px; color: var(--fg-strong); scroll-margin-top: 130px; }
+.post-body h4 { font-size: 14.5px; margin: 14px 0 6px; }
+.post-body p { margin: 0 0 1em; }
+.post-body ul, .post-body ol { margin: 0 0 1em; padding-left: 1.5em; }
+.post-body li { margin: .25em 0; }
+.post-body blockquote { margin: 0 0 1em; padding: 3px 14px; border-left: 3px solid var(--border-strong); color: var(--fg-muted); }
+.post-body hr { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
 .post-body img { max-width: 100%; border-radius: 4px; }
-.post-body table { width: 100%; border-collapse: collapse; margin: 0 0 1.3em; font-size: 14px; display: block; overflow-x: auto; }
-.post-body th, .post-body td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; }
+.post-body table { width: 100%; border-collapse: collapse; margin: 0 0 1.1em; font-size: 14px; display: block; overflow-x: auto; }
+.post-body th, .post-body td { border: 1px solid var(--border); padding: 6px 9px; text-align: left; }
 .post-body th { background: var(--bg-alt, var(--bg-sidebar)); font-weight: 600; }
 .post-body :not(pre) > code {
   background: var(--code-bg); border: 1px solid var(--border);
@@ -442,7 +501,7 @@ img { max-width: 100%; }
 .toc a:hover, .toc a.active { color: var(--link); }
 .toc-h3 > a { font-size: 12.5px; }
 
-.post-nav { display: flex; gap: 14px; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); }
+.post-nav { display: flex; gap: 14px; margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border); }
 .post-nav a {
   flex: 1; padding: 12px 14px; border: 1px solid var(--border); border-radius: 5px;
   display: flex; flex-direction: column; gap: 2px; color: var(--fg);

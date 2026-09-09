@@ -1,8 +1,10 @@
 <%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v, ogType: 'article' }) %>
 <%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
 
-<div class="layout">
-  <main class="content" id="main">
+<div class="layout layout-post">
+  <%- include('partials/toc-aside', { toc: post.toc }) %>
+
+  <main class="content post-content" id="main">
     <article class="post-single">
       <header>
         <h1 class="post-title"><%= post.title %></h1>
@@ -25,11 +27,7 @@
         <img class="post-cover" src="<%= u(post.cover) %>" alt="">
       <% } %>
 
-      <% if (post.toc && post.toc.length) { %>
-        <%- include('partials/toc', { toc: post.toc }) %>
-      <% } %>
-
-      <div class="post-body">
+      <div class="post-body" id="postContent">
         <%- post.html %>
       </div>
 
@@ -49,8 +47,6 @@
       </nav>
     </article>
   </main>
-
-  <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
 </div>
 
 <%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>

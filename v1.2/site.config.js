@@ -19,7 +19,7 @@ module.exports = {
     lang: 'zh-CN',
     copyright: '© 2026 云梦',
     // 每页显示多少篇文章（改这个数字即可调整分页；想看分页效果可改成 2）
-    postsPerPage: 4,
+    postsPerPage: 5,
   },
 
   /* ---------- 2. 导航菜单 ---------- */
