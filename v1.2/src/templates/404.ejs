@@ -1,0 +1,17 @@
+<%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v, noindex: true }) %>
+<%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+
+<div class="layout-full">
+  <main class="content" id="main" style="max-width:600px;margin:24px auto">
+    <section class="error-page">
+      <h1>404</h1>
+      <p>这个页面不存在。可能是链接过期或输入有误。</p>
+      <p>
+        <a class="btn" href="<%= u('/') %>">返回首页</a>
+        <a class="btn" href="<%= u('search/') %>">搜索文章</a>
+      </p>
+    </section>
+  </main>
+</div>
+
+<%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>
