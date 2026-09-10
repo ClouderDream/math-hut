@@ -1,0 +1,19 @@
+<%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v }) %>
+<%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+
+<div class="layout">
+  <main class="content" id="main">
+    <h1 class="content-title">搜索</h1>
+    <p class="content-subtitle">覆盖标题、摘要、标签与正文</p>
+
+    <form class="search-page-form" action="<%= u('search/') %>" method="get">
+      <input type="search" id="searchInputPage" name="q" placeholder="输入关键词，如「特征值」「薛定谔」" autocomplete="off" autofocus value="<%= (typeof q !== 'undefined' ? q : '') %>">
+    </form>
+    <p class="search-hint" id="searchHintPage"><%= (typeof q !== 'undefined' && q) ? ('关键词：' + q) : '输入至少 1 个字符开始搜索。' %></p>
+    <div class="search-results" id="searchResultsPage"></div>
+  </main>
+
+  <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+</div>
+
+<%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>

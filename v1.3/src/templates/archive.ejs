@@ -1,0 +1,30 @@
+<%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v }) %>
+<%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+
+<div class="layout">
+  <main class="content" id="main">
+    <h1 class="content-title">归档</h1>
+    <p class="content-subtitle">共 <%= total %> 篇文章</p>
+
+    <% groups.forEach(function (g) { %>
+      <section class="archive-year">
+        <h2><%= g.year %></h2>
+        <ul class="archive-list">
+          <% g.posts.forEach(function (post) { %>
+            <li>
+              <time datetime="<%= post.dateISO %>"><%= post.date.slice(5) %></time>
+              <a class="post-title-link" href="<%= post.url %>"><%= post.title %></a>
+              <span class="tags">
+                <% post.tags.forEach(function (t) { %><a class="tag-inline" href="<%= u('tags/' + encodeURIComponent(t) + '/') %>"><%= t %></a><% }); %>
+              </span>
+            </li>
+          <% }); %>
+        </ul>
+      </section>
+    <% }); %>
+  </main>
+
+  <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+</div>
+
+<%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>

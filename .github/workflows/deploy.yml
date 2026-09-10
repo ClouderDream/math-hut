@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: v1.2
+        working-directory: v1.3
     steps:
       - name: 拉取代码
         uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: v1.2/package-lock.json
+          cache-dependency-path: v1.3/package-lock.json
 
       - name: 安装依赖
         run: npm ci
@@ -50,7 +50,7 @@ jobs:
       - name: 上传产物
         uses: actions/upload-pages-artifact@v3
         with:
-          path: v1.2/dist
+          path: v1.3/dist
 
   deploy:
     needs: build

@@ -1,0 +1,62 @@
+<%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v, noindex: noindex, ogType: 'website' }) %>
+<%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">数理 · 直觉 · 证明</div>
+    <h1>在公式与<em>直觉</em><br>之间，搭建一座小屋。</h1>
+    <p class="lede"><%= site.subtitle %>。用尽量少的符号、尽量清晰的推导，把数学物理里那些“原来如此”的瞬间讲给你听。</p>
+    <div class="cta">
+      <a class="btn" href="<%= featured ? featured.url : u('archive/') %>">开始阅读</a>
+      <a class="btn ghost" href="<%= u('rss.xml') %>">订阅更新</a>
+    </div>
+  </div>
+</section>
+
+<div class="layout">
+  <main id="main">
+    <% if (featured) { %>
+      <article class="featured">
+        <span class="tag">本期精选</span>
+        <h2><a href="<%= featured.url %>"><%= featured.title %></a></h2>
+        <p class="excerpt"><%= featured.summary %></p>
+        <div class="meta">
+          <span><%= featured.date %></span><span>·</span>
+          <span>约 <%= featured.readingTime %> 分钟</span>
+          <% if (featured.tags && featured.tags.length) { %><span>·</span><span><%= featured.tags.join(' / ') %></span><% } %>
+        </div>
+      </article>
+    <% } %>
+
+    <div class="sec-head">
+      <h3><%= isFirst ? '最新文章' : ('第 ' + (typeof pager.current !== 'undefined' ? pager.current : 1) + ' 页文章') %></h3>
+      <a href="<%= u('archive/') %>">查看全部 →</a>
+    </div>
+
+    <% if (!listPosts.length) { %>
+      <p class="empty">还没有文章。运行 <code>npm run new "文章标题"</code> 创建第一篇。</p>
+    <% } %>
+
+    <% listPosts.forEach(function (post, i) { %>
+      <article class="post">
+        <div class="num"><%= String(i + 1).padStart(2, '0') %></div>
+        <div class="post-main">
+          <% if (post.tags && post.tags.length) { %><div class="cat"><%= post.tags[0] %></div><% } %>
+          <h4><a href="<%= post.url %>"><%= post.title %></a></h4>
+          <p class="exc"><%= post.summary %></p>
+          <div class="meta">
+            <span><%= post.date %></span><span>·</span>
+            <span>约 <%= post.readingTime %> 分钟</span>
+            <% if (post.tags && post.tags.length) { %><span>·</span><span><%= post.tags.join(' / ') %></span><% } %>
+          </div>
+        </div>
+      </article>
+    <% }); %>
+
+    <%- include('partials/pagination', { pager: pager }) %>
+  </main>
+
+  <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+</div>
+
+<%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>

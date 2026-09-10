@@ -1,0 +1,22 @@
+<!-- 极简编辑风：吸顶细线导航（品牌标 + 导航 + 搜索胶囊） -->
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand" href="<%= u('/') %>">
+      <span class="brand-mark">云</span>
+      <span class="brand-name"><%= site.title %></span>
+      <small class="brand-en">Math&nbsp;Hut</small>
+    </a>
+
+    <nav class="nav-links" role="navigation" aria-label="主导航">
+      <% (cfg.nav || []).forEach(function (item) { %>
+        <% if (!item || item.link === '/search/') return; %>
+        <a href="<%= u(item.link) %>" class="<%= currentPath === u(item.link) ? 'active' : '' %>"><%= item.text %></a>
+      <% }); %>
+    </nav>
+
+    <form class="nav-search" action="<%= u('search/') %>" method="get" role="search" aria-label="站内搜索">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" name="q" placeholder="搜索公式、定理、概念…" autocomplete="off" aria-label="搜索关键词">
+    </form>
+  </div>
+</header>

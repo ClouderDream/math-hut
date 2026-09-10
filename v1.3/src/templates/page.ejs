@@ -1,0 +1,19 @@
+<%- include('partials/head', { pageTitle: pageTitle, pageDesc: pageDesc, canonical: canonical, lang: lang, site: site, cfg: cfg, u: u, v: v }) %>
+<%- include('partials/nav', { site: site, cfg: cfg, u: u, v: v, currentPath: currentPath, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+
+<div class="layout">
+  <main class="content" id="main">
+    <article class="post-single about-page">
+      <header>
+        <h1 class="post-title"><%= page.title %></h1>
+      </header>
+      <div class="post-body">
+        <%- page.html %>
+      </div>
+    </article>
+  </main>
+
+  <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
+</div>
+
+<%- include('partials/footer', { site: site, cfg: cfg, u: u, v: v }) %>
