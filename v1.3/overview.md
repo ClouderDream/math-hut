@@ -1,70 +1,70 @@
-# 项目总览：云梦的数理小屋
+# v1.3 总览：云梦数理小屋（极简编辑风）
 
-## 做了什么
+## 这一版是什么
 
-一个面向数学与物理的**纯静态博客**，从零写完并构建通过。数据源是本地 Markdown，产物是可以直接托管的一堆 HTML。
+以 `v1.3/ui_new/main/v1-main-editorial.html` 与 `v1.3/ui_new/admin/v1-admin-editorial.html`
+为基准，把 v1.2 迭代成 **v1.3「极简编辑风」**：暖纸底 + 墨蓝点缀 + 衬线标题。
+v1.3 已经是 **GitHub Pages 的部署版本**（`.github/workflows/deploy.yml` 指向 v1.3）。
 
-- 目录：`G:\buddywork\9.7云梦数理小屋\`
-- 线上目标：`https://ClouderDream.github.io/math-hut/`
-- 本地预览：`http://localhost:4173/math-hut/`（已在运行）
-- 后台入口：`http://localhost:4173/math-hut/admin/`
+- 项目目录：`G:\buddywork\9.7云梦数理小屋\v1.3\`
+- 线上地址：https://ClouderDream.github.io/math-hut/
+- 后台入口：https://ClouderDream.github.io/math-hut/admin/
+- 本地预览：`cd v1.3 && node scripts/dev.js --no-watch --port 4173` → http://localhost:4173/math-hut/
 
-## 已实现的功能
+## 视觉与结构改动
 
-| 功能 | 状态 | 实现要点 |
+| 区域 | v1.2 | v1.3（编辑风） |
 |---|---|---|
-| 文章列表 + 分页 | ✅ | 每页数量在 `site.config.js` 的 `postsPerPage`，当前 4，已生成第 2 页 |
-| 文章详情页 | ✅ | Markdown 渲染、代码高亮、行内/行间公式、自动目录、上下篇导航 |
-| 标签分类页 | ✅ | 10 个标签，总数与单标签列表页均生成 |
-| 关于页 | ✅ | `content/pages/about.md`，联系方式为占位值 |
-| 归档页 | ✅ | 按年份分组 |
-| 全站搜索 | ✅ | 构建期 `search-index.json`（6.7KB），前端 bigram 分词 + 字段加权打分；顶部也有搜索弹层（`/` 或 Ctrl+K 唤起） |
-| 明暗主题 | ✅ | CSS 变量 + `<html data-theme>` + 内联防闪烁脚本 + localStorage |
-| 响应式 | ✅ | 980px / 720px 两个断点，移动端汉堡菜单、目录折叠 |
-| 在线后台 | ✅ | 纯前端 + GitHub Contents API，口令 + PAT 登录，新建/编辑/删除/实时预览 |
-| RSS / sitemap / robots / 404 | ✅ | 全部生成 |
-| GitHub Actions 部署 | ✅ | `.github/workflows/deploy.yml` |
+| 顶部 | 蓝底 banner + 深蓝水平导航 | 吸顶细线导航：圆形「云」品牌标 + 导航 + 搜索胶囊 |
+| 首页头图 | 无 | Hero：kicker「数理 · 直觉 · 证明」+ 衬线大标题 + lede + 双 CTA |
+| 首页列表 | 平铺卡片 | 「本期精选」单独放大 + 编号列表（01…） |
+| 侧栏 | widget 列表 | 卡片式挂件（关于小屋 / 标签云 / 近期更新 / 订阅） |
+| 配色 | 白底 + 蓝条 #2563eb | 暖纸 `#FBF9F4` + 墨蓝 `#34406B` |
+| 字体 | Noto Sans/Serif SC | 标题 Fraunces + Noto Serif SC，正文 Noto Sans SC |
+| 主题 | 明暗双主题 | **仅浅色**（纸感设计，移除暗色与切换按钮） |
+| 后台 | 蓝白学术风 | 同色板编辑风，登录卡换圆形「云」标 |
 
-## 关键技术决策
+### 首页「精选 + 列表」怎么算的
 
-1. **零框架 Node 静态生成器**（EJS 模板），依赖仅 5 个且全部构建期使用：
-   `markdown-it` / `katex` / `highlight.js` / `ejs` / `gray-matter`。读者端只有约 6KB 自写 JS。
-2. **KaTeX 构建期预渲染**，读者端不加载任何 KaTeX JS，禁用 JS 也能看公式。
-3. **解决 `$a_1$` 被当斜体的经典坑**：行内数学规则注册在 markdown-it `escape` 规则**之前**
-   （`src/lib/md-math.js`），该文件同时兼容 Node 与浏览器，后台预览复用同一套规则。
-4. **URL 全部用「目录 + index.html」**，base path 由 `site.config.js` 一处控制，
-   所有链接经 `src/lib/url.js` 生成，避免 Windows 反斜杠泄漏进 URL。
-5. **后台无服务端**：GitHub Pages 没有后端，只能用浏览器直调 GitHub REST API。
-   管理口令哈希写在公开 JS 里，**只防误操作**；真正的安全边界是 PAT。
+`src/generators/index.js` 负责：
 
-## 交付物清单
+- 第 1 页：首篇升为 `featured`，列表显示其余 `p.items.slice(1)`
+- 第 2 页起：无 featured，列表显示整页 5 篇
 
-| 文件 | 说明 |
-|---|---|
-| `README.md` | 小白手册：目录结构、命令、写文章、部署、后台、常见问题 |
-| `docs/技术选型-KaTeX-vs-LaTeX.md` | KaTeX / MathJax / 服务端 LaTeX 三路线九维度对比 + 限制清单 + 决策树 |
-| `docs/GitHub部署与KaTeX接入指南.md` | 11 章可导出 PDF 的落地指南，每步可复制执行 |
-| `site.config.js` | 全站唯一配置源 |
-| `content/posts/*.md` | 5 篇示例文章（微积分 / 线性代数 / 经典力学 / 量子力学 / 电磁学） |
-| `src/` | 生成器源码（lib / generators / templates / assets / admin） |
-| `.github/workflows/deploy.yml` | 自动构建部署 |
+这样既复刻了设计稿「1 精选 + 4 编号」，又保持 `postsPerPage = 5` 的分页不变。
 
-## 构建与验证结果
+## 构建与部署结果
 
 ```
-[build] 云梦的数理小屋  →  dist/   (base = /math-hut/)
-  · 文章 5 篇
-  · 分页 2 页 · 标签 10 个 · 搜索索引 6.7 KB
-[done] 用时 1.15s
+[build] 云梦数理小屋  →  dist/   (base = /math-hut/)
+  · 文章 10 篇
+  · 分页 2 页 · 标签 20 个 · 搜索索引 10.1 KB
+[done] 用时 1.48s
 ```
 
-- 公式渲染：983 处 KaTeX 输出，**0 处渲染错误**
-- 路由冒烟：18 条全部 200（含中文标签页、字体 woff2、admin、rss、sitemap）
-- 产物体积：3.7 MB（主要是 KaTeX 字体，前台与后台各一份）
+- 本地路由冒烟：首页 / 文章页 / 管理页 / main.css 均 200
+- 线上校验：commit `3e36113`，Actions run `34460594622` **success**
+- curl 线上已确认：标题「云梦数理小屋 · 数理 · 直觉 · 证明」、Hero 标题、
+  精选文章、编号列表 4 条、v1.3 页脚均已生效
+
+## 后续改动务必注意的约束
+
+1. **`content/site.json` 会覆盖 `site.config.js`** 的 `site` / `nav` / `social`
+   （见 `src/lib/config.js`）。改站点标题、副标题、导航必须**两处同步**。
+2. **`code.css` 依赖 main.css 提供的变量**：
+   `--accent`、`--bg`、`--fg-muted`、`--font-mono`、`--radius-sm`。
+   重写 main.css 时若删掉这些变量，代码块描边与圆角会失效。
+3. **admin.ejs 同时加载 main.css 和 admin.css**，admin.css 必须**最后加载**，
+   否则主站的 `.btn` 等基础样式会覆盖后台样式。
+4. **后台是 GitHub API 驱动的 SPA**（`admin.js` + `github.js` 靠 id 取元素）。
+   改后台请「只换 CSS 视觉」，不要重构 `admin.ejs` 的结构或 id，否则功能会断。
+5. 后台读写路径集中在 `site.config.js` 的 `admin.postsDir / pagesDir / imagesDir / siteConfigPath`，
+   当前均为 `v1.3/content/...`。
 
 ## 还没做的事
 
-- **GitHub 仓库尚未创建 / 未推送**：需要执行 README 第 5 节的命令，并在 Settings → Pages 把 Source 选成 GitHub Actions。
-- **后台口令还是默认占位值**：需要跑 `npm run hash-password` 并把结果填进 `site.config.js`。
-- **联系方式是占位值**：`site.config.js` 的 `social` 段要换成真实邮箱与 GitHub。
-- **AICoding 架构专家团的 4 份架构文档**：G3《高层架构设计》因成员 Agent 工具集缺 `TaskList`/`Bash` 而崩溃过一次，已改非团队模式重试，尚未回传结果。
+- **后台口令仍是默认占位值**：建议跑 `npm run hash-password 你的口令`，
+  把输出填进 `site.config.js` 的 `passHash` / `passSalt`。
+- **联系方式是占位值**：`content/site.json` 的邮箱仍是 `your-email@example.com`。
+- Hero 首屏文案目前写死在 `src/templates/index.ejs`（kicker / 大标题 / lede 后半句），
+  若要完全交给后台配置，需要再往 `site.json` 里加字段。
