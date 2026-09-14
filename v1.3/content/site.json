@@ -18,33 +18,14 @@
     "footerPowered": "GitHub Pages 驱动"
   },
   "nav": [
-    {
-      "text": "文章",
-      "link": "/"
-    },
-    {
-      "text": "标签",
-      "link": "/tags/"
-    },
-    {
-      "text": "归档",
-      "link": "/archive/"
-    },
-    {
-      "text": "关于",
-      "link": "/about/"
-    },
-    {
-      "text": "搜索",
-      "link": "/search/"
-    }
+    {"text": "文章", "link": "/"},
+    {"text": "科研前沿", "link": "/research/"},
+    {"text": "标签", "link": "/tags/"},
+    {"text": "归档", "link": "/archive/"},
+    {"text": "关于", "link": "/about/"},
+    {"text": "搜索", "link": "/search/"}
   ],
   "social": [
-    {
-      "name": "邮箱",
-      "icon": "mail",
-      "link": "mailto:1583678048@qq.com",
-      "text": "1583678048@qq.com"
-    }
+    {"name": "邮箱", "icon": "mail", "link": "mailto:1583678048@qq.com", "text": "1583678048@qq.com"}
   ]
 }

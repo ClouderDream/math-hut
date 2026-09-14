@@ -21,6 +21,7 @@ const genPage = require('./generators/page');
 const genFeed = require('./generators/feed');
 const genSearchIndex = require('./generators/search-index');
 const genAdmin = require('./generators/admin');
+const genResearch = require('./generators/research');
 
 const DIST = path.join(ROOT, 'dist');
 const CONTENT = path.join(ROOT, 'content');
@@ -37,11 +38,9 @@ async function build() {
 
   log(`\n[build] ${cfg.site.title}  →  dist/   (base = ${BASE})`);
 
-  // ---------- 1. 清理 ----------
   rmDir(DIST);
   fs.mkdirSync(DIST, { recursive: true });
 
-  // ---------- 2. 读文章 ----------
   if (!fs.existsSync(POSTS)) fs.mkdirSync(POSTS, { recursive: true });
   const files = fs.readdirSync(POSTS).filter((f) => f.endsWith('.md')).sort();
 
@@ -64,11 +63,12 @@ async function build() {
     });
   }
 
-  // 日期倒序
   posts.sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title, 'zh'));
-  log(`  · 文章 ${posts.length} 篇`);
+  const isResearchPost = (p) => (p.tags || []).includes('科研前沿');
+  const mainPosts = posts.filter((p) => !isResearchPost(p));
+  const researchPosts = posts.filter(isResearchPost);
+  log(`  · 文章 ${posts.length} 篇（常规 ${mainPosts.length} · 科研前沿 ${researchPosts.length}）`);
 
-  // ---------- 3. 公共渲染上下文 ----------
   const ctx = {
     cfg,
     site: cfg.site,
@@ -79,7 +79,6 @@ async function build() {
     write: (rel, content) => writeFile(path.join(DIST, rel), content),
   };
 
-  // ---------- 3.5 侧边栏共享数据 ----------
   const tagMap = new Map();
   for (const p of posts) for (const t of p.tags || []) {
     if (!tagMap.has(t)) tagMap.set(t, 0);
@@ -101,14 +100,14 @@ async function build() {
     .sort((a, b) => b.year.localeCompare(a.year));
 
   ctx.sidebar = {
-    recentPosts: posts.slice(0, 6),
+    recentPosts: mainPosts.slice(0, 6),
     topTags,
     archiveMonths,
     totalPosts: posts.length,
   };
 
-  // ---------- 4. 生成页面 ----------
-  const { totalPages } = await genIndex(ctx, posts);
+  const { totalPages } = await genIndex(ctx, mainPosts);
+  const researchCount = await genResearch(ctx, posts);
   await genPost(ctx, posts);
   const tags = await genTag(ctx, posts);
   await genArchive(ctx, posts);
@@ -116,19 +115,16 @@ async function build() {
   const docs = genSearchIndex(ctx, posts);
   await genFeed(ctx, posts, tags);
   if (cfg.admin.enabled) await genAdmin(ctx);
-  log(`  · 分页 ${totalPages} 页 · 标签 ${tags.length} 个 · 搜索索引 ${(JSON.stringify(docs).length / 1024).toFixed(1)} KB`);
+  log(`  · 分页 ${totalPages} 页 · 科研前沿 ${researchCount} 期 · 标签 ${tags.length} 个 · 搜索索引 ${(JSON.stringify(docs).length / 1024).toFixed(1)} KB`);
 
-  // ---------- 5. 拷贝静态资源 ----------
   const assets = path.join(ROOT, 'src', 'assets');
   if (fs.existsSync(path.join(assets, 'css'))) copyDir(path.join(assets, 'css'), path.join(DIST, 'assets', 'css'));
   if (fs.existsSync(path.join(assets, 'js'))) copyDir(path.join(assets, 'js'), path.join(DIST, 'assets', 'js'));
   if (fs.existsSync(path.join(assets, 'img'))) copyDir(path.join(assets, 'img'), path.join(DIST, 'assets', 'img'));
 
-  // 后台上传的图片放在 content/images/，构建时复制到 dist/images/
   const imagesDir = path.join(ROOT, 'content', 'images');
   if (fs.existsSync(imagesDir)) copyDir(imagesDir, path.join(DIST, 'images'));
 
-  // KaTeX：css 与 fonts 必须同层
   const katexDist = path.join(ROOT, 'node_modules', 'katex', 'dist');
   if (fs.existsSync(katexDist)) {
     copyFile(path.join(katexDist, 'katex.min.css'), path.join(DIST, 'assets', 'css', 'katex.min.css'));
@@ -138,10 +134,8 @@ async function build() {
     }
   }
 
-  // GitHub Pages 需要 .nojekyll
   writeFile(path.join(DIST, '.nojekyll'), '');
 
-  // ---------- 6. 汇总 ----------
   const errs = mathPlugin.getErrors();
   if (errs.length) {
     log(`\n[warn] ${errs.length} 处公式渲染异常（已降级为原文显示，不影响构建）：`);
