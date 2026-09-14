@@ -5,17 +5,27 @@
     "description": "一个记录微积分、线性代数、经典力学与量子力学的个人博客，包含推导、公式与可运行代码。",
     "author": "云梦",
     "copyright": "© 2026 云梦",
-    "banner": ""
+    "banner": "",
+    "brandMark": "云",
+    "heroKicker": "数理 · 直觉 · 证明",
+    "heroTitle": "在公式与直觉之间，搭建一座小屋。",
+    "heroLede": "用尽量少的符号、尽量清晰的推导，把数学物理里那些原来如此的瞬间讲给你听。",
+    "heroPrimaryText": "开始阅读",
+    "heroPrimaryLink": "/archive/",
+    "heroSecondaryText": "订阅更新",
+    "heroSecondaryLink": "/rss.xml",
+    "footerTagline": "用公式记录好奇心",
+    "footerPowered": "由 GitHub Pages 驱动 · 极简编辑风"
   },
   "nav": [
-    { "text": "文章", "link": "/" },
-    { "text": "标签", "link": "/tags/" },
-    { "text": "归档", "link": "/archive/" },
-    { "text": "关于", "link": "/about/" },
-    { "text": "搜索", "link": "/search/" }
+    {"text":"文章","link":"/"},
+    {"text":"标签","link":"/tags/"},
+    {"text":"归档","link":"/archive/"},
+    {"text":"关于","link":"/about/"},
+    {"text":"搜索","link":"/search/"}
   ],
   "social": [
-    { "name": "GitHub", "icon": "github", "link": "https://github.com/ClouderDream", "text": "github.com/ClouderDream" },
-    { "name": "邮箱", "icon": "mail", "link": "mailto:your-email@example.com", "text": "your-email@example.com" }
+    {"name":"GitHub","icon":"github","link":"https://github.com/ClouderDream","text":"github.com/ClouderDream"},
+    {"name":"邮箱","icon":"mail","link":"mailto:your-email@example.com","text":"your-email@example.com"}
   ]
 }
