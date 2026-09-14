@@ -48,9 +48,12 @@ module.exports = async function generateAdmin(ctx) {
   const root = path.resolve(__dirname, '..', '..');
   const nm = path.join(root, 'node_modules');
 
-  // 3. 后台脚本
+  // 3. 后台脚本：核心逻辑 + v1.4 结构化设置 / 媒体增强
   write(`${distAdmin}/github.js`, fs.readFileSync(path.join(root, 'src', 'admin', 'github.js'), 'utf8'));
-  write(`${distAdmin}/admin.js`, fs.readFileSync(path.join(root, 'src', 'admin', 'admin.js'), 'utf8'));
+  const adminCore = fs.readFileSync(path.join(root, 'src', 'admin', 'admin.js'), 'utf8');
+  const settingsEnhancement = fs.readFileSync(path.join(root, 'src', 'admin', 'settings-enhancements.js'), 'utf8');
+  const mediaEnhancement = fs.readFileSync(path.join(root, 'src', 'admin', 'media-enhancements.js'), 'utf8');
+  write(`${distAdmin}/admin.js`, [adminCore, settingsEnhancement, mediaEnhancement].join('\n\n'));
 
   // 4. vendor：markdown-it UMD 版
   const miSrc = path.join(nm, 'markdown-it', 'dist', 'markdown-it.min.js');
@@ -63,7 +66,6 @@ module.exports = async function generateAdmin(ctx) {
     write(`${distAdmin}/vendor/katex.min.css`, fs.readFileSync(path.join(katexDist, 'katex.min.css'), 'utf8'));
     const fonts = path.join(katexDist, 'fonts');
     if (fs.existsSync(fonts)) {
-      // 只拷 woff2 + woff，省体积
       copyDir(fonts, path.join(root, 'dist', distAdmin, 'vendor', 'fonts'), (p) => /\.(woff2?|ttf)$/i.test(p));
     }
   }
