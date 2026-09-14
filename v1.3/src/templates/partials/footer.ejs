@@ -1,7 +1,7 @@
 <footer class="site-footer">
   <div class="wrap footer-inner">
-    <span><%= site.copyright %> · 用公式记录好奇心</span>
-    <span>由 GitHub Pages 驱动 · v1.3 极简编辑风</span>
+    <span><%= site.copyright %><% if (site.footerTagline) { %> · <%= site.footerTagline %><% } %></span>
+    <span><%= site.footerPowered || '由 GitHub Pages 驱动 · 极简编辑风' %></span>
   </div>
 </footer>
 
