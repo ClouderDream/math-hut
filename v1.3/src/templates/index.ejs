@@ -3,12 +3,12 @@
 
 <section class="hero">
   <div class="wrap">
-    <div class="kicker">数理 · 直觉 · 证明</div>
-    <h1>在公式与<em>直觉</em><br>之间，搭建一座小屋。</h1>
-    <p class="lede"><%= site.subtitle %>。用尽量少的符号、尽量清晰的推导，把数学物理里那些“原来如此”的瞬间讲给你听。</p>
+    <div class="kicker"><%= site.heroKicker || site.subtitle || '数理 · 直觉 · 证明' %></div>
+    <h1><%= site.heroTitle || '在公式与直觉之间，搭建一座小屋。' %></h1>
+    <p class="lede"><%= site.heroLede || '用尽量少的符号、尽量清晰的推导，把数学物理里那些原来如此的瞬间讲给你听。' %></p>
     <div class="cta">
-      <a class="btn" href="<%= featured ? featured.url : u('archive/') %>">开始阅读</a>
-      <a class="btn ghost" href="<%= u('rss.xml') %>">订阅更新</a>
+      <a class="btn" href="<%= u(site.heroPrimaryLink || '/archive/') %>"><%= site.heroPrimaryText || '开始阅读' %></a>
+      <a class="btn ghost" href="<%= u(site.heroSecondaryLink || '/rss.xml') %>"><%= site.heroSecondaryText || '订阅更新' %></a>
     </div>
   </div>
 </section>
@@ -34,7 +34,7 @@
     </div>
 
     <% if (!listPosts.length) { %>
-      <p class="empty">还没有文章。运行 <code>npm run new "文章标题"</code> 创建第一篇。</p>
+      <p class="empty">还没有文章。</p>
     <% } %>
 
     <% listPosts.forEach(function (post, i) { %>
