@@ -1,15 +1,15 @@
-/* v1.4/v1.5 responsive layout + subtle mathematics ambience */
+/* v1.4/v1.6 responsive layout + subtle mathematics ambience */
 .menu-toggle{display:none;margin-left:auto;width:40px;height:40px;border:1px solid var(--line-strong);border-radius:50%;background:transparent;color:var(--ink);font-size:18px;line-height:1;cursor:pointer}.mobile-search-link{display:none}.hero h1{white-space:pre-line}
 
-/* 数学/物理水印：只作为纸面纹理，不参与交互。透明度严格控制在 3%–6%。 */
+/* 数学/物理水印：保持克制，但从原来的几乎不可见提高到约 6%–9%。 */
 .math-ambient{position:fixed;inset:0;overflow:hidden;pointer-events:none;user-select:none;z-index:0;color:var(--accent)}
-.math-mark{position:absolute;font-family:"Fraunces","Noto Serif SC",Georgia,serif;font-weight:400;white-space:nowrap;opacity:.045;line-height:1;transform:rotate(-7deg)}
-.mm-1{left:3vw;top:15vh;font-size:88px;opacity:.035}.mm-2{right:5vw;top:10vh;font-size:74px;opacity:.04;transform:rotate(8deg)}
-.mm-3{left:7vw;top:54vh;font-size:34px;opacity:.045;transform:rotate(-4deg)}.mm-4{right:9vw;top:41vh;font-size:46px;opacity:.05;transform:rotate(6deg)}
-.mm-5{left:45vw;top:22vh;font-size:64px;opacity:.035;transform:rotate(2deg)}.mm-6{right:4vw;bottom:12vh;font-size:26px;opacity:.05;transform:rotate(-5deg)}
-.mm-7{left:12vw;bottom:9vh;font-size:32px;opacity:.04;transform:rotate(5deg)}.mm-8{left:53vw;bottom:28vh;font-size:27px;opacity:.04;transform:rotate(-8deg)}
-.site-nav,.hero,.layout,.site-footer,main,article,aside{isolation:auto}
+.math-mark{position:absolute;font-family:"Fraunces","Noto Serif SC",Georgia,serif;font-weight:400;white-space:nowrap;opacity:.075;line-height:1;transform:rotate(-7deg)}
+.mm-1{left:2.5vw;top:14vh;font-size:92px;opacity:.06}.mm-2{right:4vw;top:9vh;font-size:78px;opacity:.065;transform:rotate(8deg)}
+.mm-3{left:5vw;top:52vh;font-size:36px;opacity:.08;transform:rotate(-4deg)}.mm-4{right:7vw;top:39vh;font-size:48px;opacity:.085;transform:rotate(6deg)}
+.mm-5{left:44vw;top:20vh;font-size:68px;opacity:.06;transform:rotate(2deg)}.mm-6{right:3vw;bottom:11vh;font-size:28px;opacity:.09;transform:rotate(-5deg)}
+.mm-7{left:10vw;bottom:8vh;font-size:34px;opacity:.075;transform:rotate(5deg)}.mm-8{left:52vw;bottom:27vh;font-size:29px;opacity:.075;transform:rotate(-8deg)}
+.site-body>.site-nav,.site-body>.hero,.site-body>main,.site-body>.site-footer{position:relative;z-index:1}
 
 @media(max-width:1050px){.layout:not(.layout-post){grid-template-columns:1fr;gap:40px}.layout:not(.layout-post) .sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.layout:not(.layout-post) .sidebar .wd{margin-bottom:0}}
-@media(max-width:860px){.nav-inner{position:relative}.menu-toggle{display:inline-grid;place-items:center}.nav-links{display:none;position:absolute;top:64px;left:0;right:0;margin:0;padding:12px 16px 18px;flex-direction:column;gap:0;background:rgba(251,249,244,.98);border-bottom:1px solid var(--line);box-shadow:0 14px 30px rgba(28,27,25,.08)}.nav-links.open{display:flex}.nav-links a{display:block;padding:12px 2px;border-bottom:1px solid var(--line)}.nav-links a::after{display:none}.nav-links a:last-child{border-bottom:none}.mobile-search-link{display:block!important;color:var(--accent)!important}.nav-search{display:none}.math-mark{opacity:.03!important}.mm-3,.mm-6,.mm-8{display:none}}
+@media(max-width:860px){.nav-inner{position:relative}.menu-toggle{display:inline-grid;place-items:center}.nav-links{display:none;position:absolute;top:64px;left:0;right:0;margin:0;padding:12px 16px 18px;flex-direction:column;gap:0;background:rgba(251,249,244,.98);border-bottom:1px solid var(--line);box-shadow:0 14px 30px rgba(28,27,25,.08)}.nav-links.open{display:flex}.nav-links a{display:block;padding:12px 2px;border-bottom:1px solid var(--line)}.nav-links a::after{display:none}.nav-links a:last-child{border-bottom:none}.mobile-search-link{display:block!important;color:var(--accent)!important}.nav-search{display:none}.math-mark{opacity:.055!important}.mm-3,.mm-6,.mm-8{display:none}}
 @media(max-width:640px){.layout:not(.layout-post) .sidebar{grid-template-columns:1fr}.hero h1{font-size:clamp(34px,12vw,52px)}}
