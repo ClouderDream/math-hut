@@ -39,6 +39,7 @@ module.exports = async function generateAdmin(ctx) {
   write(`${distAdmin}/github.js`, fs.readFileSync(path.join(root, 'src', 'admin', 'github.js'), 'utf8'));
   const parts = [
     'admin.js',
+    'admin-ui-styles.js',
     'admin-ui-enhancements.js',
     'settings-enhancements.js',
     'media-enhancements.js',
