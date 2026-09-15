@@ -1,7 +1,7 @@
 ---
 title: "科研前沿每日简报 · 2026-09-15"
 date: 2026-09-15
-tags: []
+tags: ["科研前沿", "每日简报"]
 summary: "今天关注安全关键生成式 AI、基因组语言模型、隐私保护泛基因组、二维材料光学 Tokenizer 与主动微转子集体动力学。"
 slug: "research-frontier-daily-2026-09-15"
 draft: false
@@ -9,6 +9,8 @@ draft: false
 今天简报共同趋势是：研究重点正在从“单点性能提升”转向**硬约束下的可靠生成、可迁移科学先验、隐私—效用协同设计，以及把计算直接前移到传感器与物理系统中**。
 
 ## 1. HardFlow：让生成式 AI 在安全关键任务中严格满足硬约束
+
+![HardFlow：生成式 AI 与最终硬约束](/math-hut/images/research/2026-09-15/01-hardflow.svg)
 
 ### 摘要
 MIT 团队提出 HardFlow，用于在部署阶段约束预训练生成模型。与在生成过程每一步都投影回可行域的方法不同，HardFlow 允许中间轨迹自由探索，只对最终结果严格执行安全、物理或任务约束。在机器人路径规划、物理系统控制和计算机视觉实验中，该方法能够持续满足硬约束，同时得到更高质量解，而且无需重新训练基础模型。相关论文发表于 IEEE TPAMI。
@@ -25,6 +27,8 @@ MIT 团队提出 HardFlow，用于在部署阶段约束预训练生成模型。�
 
 ## 2. GLM-Prior：把基因组语言模型变成基因调控网络推断的可迁移先验
 
+![GLM-Prior：从基因组语言模型到 GRN 先验](/math-hut/images/research/2026-09-15/02-glm-prior.svg)
+
 ### 摘要
 NYU 与 Genentech/Prescient Design 团队在 Nature Communications 发表 GLM-Prior，研究如何把基因组序列语言模型学到的信息转化为 gene regulatory network（GRN）推断中的 sequence-derived prior。核心思想不是让语言模型直接替代网络推断，而是将其作为可迁移先验，与实验表达数据和网络结构推断结合。
 
@@ -39,6 +43,8 @@ NYU 与 Genentech/Prescient Design 团队在 Nature Communications 发表 GLM-Pr
 - https://doi.org/10.1038/s41467-026-77381-8
 
 ## 3. PanMixer：泛基因组共享开始显式优化“隐私—科研效用”
+
+![PanMixer：隐私与科研效用的平衡](/math-hut/images/research/2026-09-15/03-panmixer.svg)
 
 ### 摘要
 Columbia、New York Genome Center 与 Cambridge 团队在 Nature Communications 提出 PanMixer。人类泛基因组图能更充分表示群体遗传多样性，但公开个体 haplotype 可能带来重识别和敏感性状推断风险。PanMixer 将隐私—效用权衡形式化为 knapsack problem，选择性混淆个体单倍型；实验显示，它能降低 linkage attack 与 genome reconstruction 风险，同时尽量保持等位基因频率、连锁不平衡分析和 read mapping 等下游任务准确度。
@@ -55,6 +61,8 @@ Columbia、New York Genome Center 与 Cambridge 团队在 Nature Communications 
 
 ## 4. MoS₂ 光电阵列直接完成 Light-to-Token：把视觉 Transformer 的前端搬进模拟硬件
 
+![MoS2 Light-to-Token：感知端直接产生 Token](/math-hut/images/research/2026-09-15/04-mos2-tokenizer.svg)
+
 ### 摘要
 Nature Electronics 9 月 14 日重点介绍一种基于 MoS₂ 的 light-to-token conversion。研究者构建 32×32 光晶体管阵列，并配合 FPGA 控制外围电路，在模拟域内完成光检测、图像 patch 切分与向量编码。基于修改版 CIFAR-10 的视觉 Transformer 实验达到 87.3% 准确率，同时相对传统数字 tokenizer 报告超过 14 倍的能耗降低。
 
@@ -69,6 +77,8 @@ Nature Electronics 9 月 14 日重点介绍一种基于 MoS₂ 的 light-to-toke
 - https://doi.org/10.1038/s44460-026-00122-3
 
 ## 5. 微转子“缺陷促同步”：主动材料中不完美反而驱动集体波传播
+
+![主动微转子：异质性驱动集体波](/math-hut/images/research/2026-09-15/05-active-rotors.svg)
 
 ### 摘要
 Nature Physics 9 月 14 日的 News & Views 介绍一项主动材料研究：数千个 3D 打印微型转子组成晶格后能够自发同步，并形成跨系统传播的集体波。反直觉的是，个体马达之间的小差异并非单纯破坏同步，而能够驱动波在这种人工主动物质中传播。
