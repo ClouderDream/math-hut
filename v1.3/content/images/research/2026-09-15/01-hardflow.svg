@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<rect width="1200" height="675" fill="#f7f5ef"/>
+<text x="70" y="85" font-family="Arial,'Noto Sans SC',sans-serif" font-size="42" font-weight="700" fill="#1f2937">HardFlow：生成式 AI + 最终硬约束</text>
+<text x="70" y="130" font-family="Arial,'Noto Sans SC',sans-serif" font-size="24" fill="#5b6472">允许中间轨迹自由探索，只在最终输出严格落入可行域</text>
+<path d="M110 360 C260 140, 420 560, 590 300 S900 180, 1010 335" fill="none" stroke="#52606d" stroke-width="7" stroke-dasharray="18 14"/>
+<circle cx="110" cy="360" r="20" fill="#111827"/>
+<circle cx="1010" cy="335" r="22" fill="#111827"/>
+<rect x="880" y="220" width="250" height="240" rx="24" fill="none" stroke="#8b5e3c" stroke-width="8"/>
+<text x="915" y="500" font-family="Arial,'Noto Sans SC',sans-serif" font-size="26" fill="#8b5e3c">最终可行域 / 安全边界</text>
+<text x="80" y="595" font-family="Arial,'Noto Sans SC',sans-serif" font-size="24" fill="#374151">自由探索 → 结果验证 → 硬约束满足</text>
+</svg>
