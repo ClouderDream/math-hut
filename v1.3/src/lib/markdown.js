@@ -78,6 +78,23 @@ function createMarkdown(mathOptions) {
     return defaultLinkOpen(tokens, idx, options, env, self);
   };
 
+  // 正文图片性能优化：首图优先，其余图片懒加载；全部异步解码。
+  // 不改写图片来源，也不经过第三方代理，避免新增外部依赖或版权链路。
+  const defaultImage = md.renderer.rules.image ||
+    function (tokens, idx, options, env, self) { return self.renderToken(tokens, idx, options); };
+  md.renderer.rules.image = function (tokens, idx, options, env, self) {
+    const tk = tokens[idx];
+    env.__imageCount = (env.__imageCount || 0) + 1;
+    tk.attrSet('decoding', 'async');
+    if (env.__imageCount === 1) {
+      tk.attrSet('loading', 'eager');
+      tk.attrSet('fetchpriority', 'high');
+    } else {
+      tk.attrSet('loading', 'lazy');
+    }
+    return defaultImage(tokens, idx, options, env, self);
+  };
+
   return md;
 }
 
