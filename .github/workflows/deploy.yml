@@ -41,6 +41,9 @@ jobs:
       - name: 构建静态站点
         run: npm run build
 
+      - name: 全站冒烟检查
+        run: npm run test:smoke
+
       - name: 生成 .nojekyll（否则 Pages 会忽略下划线开头的目录）
         run: touch dist/.nojekyll
 
