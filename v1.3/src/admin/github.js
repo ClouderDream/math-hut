@@ -1,12 +1,14 @@
 /**
  * GitHub Contents API 封装（浏览器端）
  *
- * 凭据策略（v1.2 安全加固）：
+ * 凭据策略：
  * - sessionStorage 始终保存当前会话的 Token
  * - 勾选「信任此电脑 30 天」后，Token 额外写入 localStorage 并记录 expires
- * - 读取时先看 session；没有则看 localStorage，但仅当未过期（≤ 30 天）才采用
  * - 过期、主动退出、GitHub 401/403 任一情况都自动 clearToken
  * - 不保存管理口令明文
+ *
+ * 文件移动策略：后台旧逻辑会先 remove(old) 再 save(new)。这里把“重命名/移动”删除延迟到
+ * 新文件成功写入之后执行，避免第二步失败导致原稿被删除。
  */
 (function () {
   var H = window.__HUT__ || {};
@@ -15,6 +17,7 @@
   var TOKEN_KEY = 'hut_token';
   var EXPIRES_KEY = 'hut_token_expires';
   var TRUST_DAYS = 30;
+  var pendingMoveDelete = null;
 
   function getToken() {
     try {
@@ -134,19 +137,47 @@
     return { text: b64dec(j.content || ''), sha: j.sha };
   }
 
-  async function save(path, text, sha, message) {
-    var body = { message: message, content: b64enc(text), branch: H.branch };
-    if (sha) body.sha = sha;
-    var j = await req(base() + encPath(path), { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
-    return { sha: j.content && j.content.sha, commit: j.commit && j.commit.sha };
-  }
-
-  async function remove(path, sha, message) {
+  async function removeNow(path, sha, message) {
     await req(base() + encPath(path), {
       method: 'DELETE',
       headers: headers(),
       body: JSON.stringify({ message: message, sha: sha, branch: H.branch }),
     });
+  }
+
+  async function save(path, text, sha, message) {
+    var body = { message: message, content: b64enc(text), branch: H.branch };
+    if (sha) body.sha = sha;
+    var pending = (!sha && pendingMoveDelete) ? pendingMoveDelete : null;
+    var j;
+    try {
+      j = await req(base() + encPath(path), { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
+    } catch (e) {
+      if (pending) pendingMoveDelete = null;
+      throw e;
+    }
+
+    var result = { sha: j.content && j.content.sha, commit: j.commit && j.commit.sha };
+    if (pending) {
+      pendingMoveDelete = null;
+      try {
+        await removeNow(pending.path, pending.sha, pending.message);
+      } catch (e) {
+        console.warn('[math-hut] 新文件已保存，但旧文件删除失败：', pending.path, e);
+        try {
+          window.dispatchEvent(new CustomEvent('hut:move-warning', { detail: { oldPath: pending.path, message: e.message || String(e) } }));
+        } catch (_) {}
+      }
+    }
+    return result;
+  }
+
+  async function remove(path, sha, message) {
+    if (String(message || '').indexOf('重命名/移动：') === 0) {
+      pendingMoveDelete = { path: path, sha: sha, message: message };
+      return { deferred: true };
+    }
+    return removeNow(path, sha, message);
   }
 
   async function saveBinary(path, b64content, sha, message) {
