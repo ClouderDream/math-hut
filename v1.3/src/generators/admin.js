@@ -44,6 +44,7 @@ module.exports = async function generateAdmin(ctx) {
     'settings-enhancements.js',
     'media-enhancements.js',
     'admin-runtime-fixes.js',
+    'admin-briefings.js',
   ].map((name) => fs.readFileSync(path.join(root, 'src', 'admin', name), 'utf8'));
   write(`${distAdmin}/admin.js`, parts.join('\n\n'));
 
