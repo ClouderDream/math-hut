@@ -8,10 +8,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# 只跑一个部署任务，后来的排队，不互相取消
+# 站点只需要部署最新 main；新提交会取消仍在排队/运行的旧部署，避免后台连续保存或自动简报造成队列堆积。
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
