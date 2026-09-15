@@ -7,6 +7,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { load, ROOT } = require('../src/lib/config');
 const { parseFile } = require('../src/lib/frontmatter');
+const { isResearchBrief, ensureResearchTags } = require('../src/lib/post-kind');
 
 const cfg = load();
 const DIST = path.join(ROOT, 'dist');
@@ -84,7 +85,6 @@ for (const file of walk(DIST).filter((f) => f.endsWith('.html'))) {
     const abs = path.join(DIST, ...target.split('/'));
     checkedRefs++;
     if (!fs.existsSync(abs)) {
-      // URL 可能指向目录但未带尾斜杠
       if (!(fs.existsSync(abs) && fs.statSync(abs).isDirectory() && fs.existsSync(path.join(abs, 'index.html')))) {
         fail('内部引用不存在：' + relHtml + ' -> ' + ref + '（解析为 ' + target + '）');
       }
@@ -92,12 +92,12 @@ for (const file of walk(DIST).filter((f) => f.endsWith('.html'))) {
   }
 }
 
-// 4) 科研前沿链路：栏目有、首页隔离、索引/RSS/sitemap 收录
+// 4) 科研前沿链路：按“简报类型”识别，避免后台误删 tags 造成栏目整体消失
 if (fs.existsSync(POSTS)) {
   const research = fs.readdirSync(POSTS)
     .filter((f) => f.endsWith('.md'))
-    .map((f) => parseFile(path.join(POSTS, f)))
-    .filter((p) => !p.draft && (p.tags || []).includes('科研前沿'))
+    .map((f) => ensureResearchTags(parseFile(path.join(POSTS, f))))
+    .filter((p) => !p.draft && isResearchBrief(p))
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   if (research.length) {
@@ -107,6 +107,8 @@ if (fs.existsSync(POSTS)) {
     const homeHtml = read('index.html');
     if (!researchHtml.includes(href)) fail('科研栏目未包含最新简报：' + latest.slug);
     if (homeHtml.includes(href)) fail('科研简报错误进入普通首页：' + latest.slug);
+    if (!exists('tags/科研前沿/index.html')) fail('缺少科研前沿标签页');
+    if (!exists('tags/每日简报/index.html')) fail('缺少每日简报标签页');
     ['rss.xml', 'sitemap.xml', 'search-index.json'].forEach((f) => {
       if (!read(f).includes(latest.slug)) fail(f + ' 未收录最新科研简报：' + latest.slug);
     });
