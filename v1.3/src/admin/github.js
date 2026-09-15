@@ -29,7 +29,6 @@
         localStorage.removeItem(EXPIRES_KEY);
         return '';
       }
-      // 将持久化 Token 提升到 sessionStorage 供本次会话使用
       sessionStorage.setItem(TOKEN_KEY, token);
       return token;
     } catch (e) { return ''; }
@@ -57,7 +56,6 @@
     } catch (e) {}
   }
 
-  /** 暴露给 admin.js 用来在 UI 展示剩余天数 */
   function trustInfo() {
     try {
       var expires = Number(localStorage.getItem(EXPIRES_KEY) || 0);
@@ -106,6 +104,7 @@
       var json = null;
       try { json = await res.json(); } catch (e) {}
       if (!res.ok) {
+        if (res.status === 401 || res.status === 403) clearToken();
         var msg = (json && json.message) || ('HTTP ' + res.status);
         var err = new Error(msg);
         err.status = res.status;
@@ -125,19 +124,16 @@
 
   var base = function () { return API + '/repos/' + H.owner + '/' + H.repo + '/contents/'; };
 
-  /** 列出目录 */
   async function listDir(dir) {
     var j = await req(base() + encPath(dir) + '?ref=' + encodeURIComponent(H.branch), { headers: headers() });
     return Array.isArray(j) ? j : [];
   }
 
-  /** 读取文本文件 */
   async function read(path) {
     var j = await req(base() + encPath(path) + '?ref=' + encodeURIComponent(H.branch), { headers: headers() });
     return { text: b64dec(j.content || ''), sha: j.sha };
   }
 
-  /** 保存文本文件 */
   async function save(path, text, sha, message) {
     var body = { message: message, content: b64enc(text), branch: H.branch };
     if (sha) body.sha = sha;
@@ -145,7 +141,6 @@
     return { sha: j.content && j.content.sha, commit: j.commit && j.commit.sha };
   }
 
-  /** 删除文件 */
   async function remove(path, sha, message) {
     await req(base() + encPath(path), {
       method: 'DELETE',
@@ -154,7 +149,6 @@
     });
   }
 
-  /** 保存二进制文件（content 已是 base64） */
   async function saveBinary(path, b64content, sha, message) {
     var body = { message: message, content: b64content, branch: H.branch };
     if (sha) body.sha = sha;
