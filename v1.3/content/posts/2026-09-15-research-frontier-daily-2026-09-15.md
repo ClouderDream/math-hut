@@ -10,7 +10,7 @@ draft: false
 
 ## 1. HardFlow：让生成式 AI 在安全关键任务中严格满足硬约束
 
-![HardFlow：生成式 AI 在硬约束下生成可行解](https://news.mit.edu/sites/default/files/download/202609/MIT-Hard-Constrained-01-Press.jpg)
+![HardFlow：生成式 AI 在硬约束下生成可行解](https://news.mit.edu/sites/default/files/styles/news_article__image_gallery/public/images/202609/MIT-Hard-Constrained-01-Press_0.jpg?itok=sPneoZ5A)
 
 *图片来源：[MIT News](https://news.mit.edu/2026/new-method-enables-ai-safety-critical-situations-0914)；Credit: MIT News; iStock；许可：CC BY-NC-ND（MIT News 下载条款，未对图片作修改）。*
 
