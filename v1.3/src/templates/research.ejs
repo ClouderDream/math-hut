@@ -11,7 +11,7 @@
 
 <div class="layout">
   <main id="main">
-    <% if (featured) { %>
+    <% if (isFirst && featured) { %>
       <article class="featured">
         <span class="tag">最新一期 · <%= featured.date %></span>
         <h2><a href="<%= featured.url %>"><%= featured.title %></a></h2>
@@ -20,7 +20,7 @@
           <span>约 <%= featured.readingTime %> 分钟</span><span>·</span><span><%= featured.tags.join(' / ') %></span>
         </div>
       </article>
-    <% } else { %>
+    <% } else if (isFirst && !featured) { %>
       <article class="featured">
         <span class="tag">栏目已就绪</span>
         <h2>第一期将在下一次每日简报完成后自动发布。</h2>
@@ -29,9 +29,13 @@
     <% } %>
 
     <div class="sec-head">
-      <h3>往期简报</h3>
+      <h3><%= isFirst ? '往期简报' : ('科研前沿 · 第 ' + pager.current + ' 页') %></h3>
       <a href="<%= u('tags/科研前沿/') %>">查看标签归档 →</a>
     </div>
+
+    <% if (!listPosts.length && !featured) { %>
+      <p class="empty">还没有简报。</p>
+    <% } %>
 
     <% listPosts.forEach(function (post, i) { %>
       <article class="post">
@@ -44,6 +48,8 @@
         </div>
       </article>
     <% }); %>
+
+    <%- include('partials/pagination', { pager: pager }) %>
   </main>
 
   <%- include('partials/sidebar', { site: site, cfg: cfg, u: u, v: v, recentPosts: sidebar.recentPosts, topTags: sidebar.topTags, archiveMonths: sidebar.archiveMonths }) %>
