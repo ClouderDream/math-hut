@@ -1,5 +1,6 @@
-/** 全流程 debug 补丁：输入校验、北京时间日期、移动失败提示。 */
+/** 全流程 debug 补丁：输入校验、北京时间日期、鉴权文案、图片即时预览、移动失败提示。 */
 (function () {
+  var H = window.__HUT__ || {};
   function $(id) { return document.getElementById(id); }
 
   function shanghaiDate() {
@@ -43,7 +44,59 @@
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
   }
 
+  function fixLoginCopy() {
+    var desc = document.querySelector('.login-desc');
+    if (desc) desc.textContent = '管理口令仅在浏览器本地校验；GitHub Token 保存在当前浏览器，并通过 HTTPS 直接发送至 GitHub API，本站没有独立后端接收或保存 Token。';
+    var input = $('tokenInput');
+    if (input) input.placeholder = 'github_pat_... 或 ghp_...';
+    var help = document.querySelector('.login-help');
+    if (help) {
+      var link = help.querySelector('ol a');
+      if (link) {
+        link.href = 'https://github.com/settings/personal-access-tokens/new';
+        link.textContent = 'GitHub Fine-grained personal access tokens';
+      }
+      var ol = help.querySelector('ol');
+      if (ol) ol.innerHTML = '<li>打开 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub Fine-grained personal access tokens</a></li><li>Expiration 建议 90 天；Repository access 选择 <strong>Only select repositories → math-hut</strong></li><li>Repository permissions 只需设置 <strong>Contents: Read and write</strong>（Metadata 保持只读）</li><li>生成后复制 <code>github_pat_...</code> 粘贴到上方；旧的 Classic PAT 仍可用，但不建议新建高权限 <code>repo</code> Token</li>';
+    }
+
+    // 旧核心日志曾按 Classic PAT 假定“期望 40 位”；Fine-grained PAT 长度不同，移除误导文字。
+    var log = $('loginLog');
+    if (log) {
+      new MutationObserver(function () {
+        log.querySelectorAll('div').forEach(function (row) {
+          if (row.textContent.indexOf('（期望 40）') >= 0) row.textContent = row.textContent.replace('（期望 40）', '（长度因 Token 类型而异）');
+        });
+      }).observe(log, { childList: true, subtree: true });
+    }
+  }
+
+  function rawImageUrl(src) {
+    var base = String(H.base || '/');
+    if (!base.startsWith('/')) base = '/' + base;
+    if (!base.endsWith('/')) base += '/';
+    var prefix = base + 'images/';
+    if (src.indexOf(prefix) !== 0) return '';
+    var rel = src.slice(prefix.length);
+    return 'https://raw.githubusercontent.com/' + encodeURIComponent(H.owner) + '/' + encodeURIComponent(H.repo) + '/' + encodeURIComponent(H.branch) + '/' + String(H.imagesDir || '').split('/').map(encodeURIComponent).join('/') + '/' + rel.split('/').map(encodeURIComponent).join('/');
+  }
+
+  function refreshPreviewImages() {
+    var preview = $('preview');
+    if (!preview) return;
+    preview.querySelectorAll('img').forEach(function (img) {
+      var src = img.getAttribute('src') || '';
+      var raw = rawImageUrl(src);
+      if (raw && img.dataset.hutRaw !== raw) {
+        img.dataset.hutRaw = raw;
+        img.src = raw; // 新上传图片无需等待 Pages 部署即可在后台预览
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
+    fixLoginCopy();
+
     // 自动登录/首次进入后台后，核心 newFile() 可能使用 UTC 日期；检测空白编辑器并纠正。
     var app = $('appView');
     if (app) {
@@ -52,6 +105,13 @@
       }).observe(app, { attributes: true, attributeFilter: ['hidden'] });
     }
     setTimeout(normalizeNewDate, 500);
+
+    // 后台预览中的新图片改走 GitHub raw，避免等待 Pages 构建 1~3 分钟。
+    var preview = $('preview');
+    if (preview) {
+      new MutationObserver(function () { setTimeout(refreshPreviewImages, 0); }).observe(preview, { childList: true, subtree: true });
+      refreshPreviewImages();
+    }
 
     // 捕获阶段先规范字段；校验不通过则阻止核心保存处理器执行。
     document.addEventListener('click', function (ev) {
