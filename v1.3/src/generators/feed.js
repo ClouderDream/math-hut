@@ -14,8 +14,10 @@ module.exports = async function generateFeed(ctx, posts, tags) {
     const urls = [{ loc: ctx.abs(''), priority: '1.0' }];
     for (const p of posts) urls.push({ loc: ctx.abs(`posts/${encodeURI(p.slug)}/`), lastmod: p.date, priority: '0.8' });
     for (const t of tags) urls.push({ loc: ctx.abs(`tags/${encodeURIComponent(t.name)}/`), priority: '0.4' });
+    urls.push({ loc: ctx.abs('research/'), priority: '0.7' });
     urls.push({ loc: ctx.abs('tags/'), priority: '0.5' });
     urls.push({ loc: ctx.abs('archive/'), priority: '0.5' });
+    urls.push({ loc: ctx.abs('about/'), priority: '0.4' });
 
     const body = urls
       .map((u) => `  <url>\n    <loc>${xmlEscape(u.loc)}</loc>${u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : ''}\n    <priority>${u.priority}</priority>\n  </url>`)
@@ -60,7 +62,7 @@ ${items}
     'robots.txt',
     `User-agent: *
 Allow: /
-Disallow: /admin/
+Disallow: ${cfg.site.base}admin/
 
 Sitemap: ${ctx.abs('sitemap.xml')}
 `
