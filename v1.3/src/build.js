@@ -11,6 +11,7 @@ const { renderMarkdown } = require('./lib/markdown');
 const { readingTime } = require('./lib/reading-time');
 const { url } = require('./lib/url');
 const { rmDir, writeFile, copyDir, copyFile } = require('./lib/writer');
+const { isResearchBrief, ensureResearchTags } = require('./lib/post-kind');
 const mathPlugin = require('./lib/md-math');
 
 const genIndex = require('./generators/index');
@@ -49,7 +50,7 @@ async function build() {
 
   let posts = [];
   for (const f of files) {
-    const meta = parseFile(path.join(POSTS, f));
+    const meta = ensureResearchTags(parseFile(path.join(POSTS, f)));
     if (meta.draft) { log(`  · 跳过草稿：${f}`); continue; }
     const { html, toc } = renderMarkdown(meta.body, { macros: cfg.math.macros || {} });
     const rt = readingTime(meta.body, cfg.readingTime);
@@ -64,9 +65,8 @@ async function build() {
   }
 
   posts.sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.title.localeCompare(b.title, 'zh'));
-  const isResearchPost = (p) => (p.tags || []).includes('科研前沿');
-  const mainPosts = posts.filter((p) => !isResearchPost(p));
-  const researchPosts = posts.filter(isResearchPost);
+  const mainPosts = posts.filter((p) => !isResearchBrief(p));
+  const researchPosts = posts.filter(isResearchBrief);
   log(`  · 文章 ${posts.length} 篇（常规 ${mainPosts.length} · 科研前沿 ${researchPosts.length}）`);
 
   const ctx = {
