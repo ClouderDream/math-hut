@@ -48,7 +48,7 @@ module.exports = async function generateAdmin(ctx) {
     'admin-responsive-about.js',
     'ocr-workspace.js',
   ].map((name) => fs.readFileSync(path.join(root, 'src', 'admin', name), 'utf8'));
-  write(`${distAdmin}/admin.js`, parts.join('\n\n'));
+  write(`${distAdmin}/admin.js`, parts.join('\n\n') + '\n\nif (window.mathPlugin && !window.mdMath) window.mdMath = window.mathPlugin;\n');
 
   const miSrc = path.join(nm, 'markdown-it', 'dist', 'markdown-it.min.js');
   if (fs.existsSync(miSrc)) write(`${distAdmin}/vendor/markdown-it.min.js`, fs.readFileSync(miSrc, 'utf8'));
