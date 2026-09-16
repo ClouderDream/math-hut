@@ -58,7 +58,7 @@ module.exports = async function generateAdmin(ctx) {
     write(`${distAdmin}/vendor/katex.min.js`, fs.readFileSync(path.join(katexDist, 'katex.min.js'), 'utf8'));
     write(`${distAdmin}/vendor/katex.min.css`, fs.readFileSync(path.join(katexDist, 'katex.min.css'), 'utf8'));
     const fonts = path.join(katexDist, 'fonts');
-    if (fs.existsSync(fonts)) copyDir(fontts = fonts, path.join(root, 'dist', distAdmin, 'vendor', 'fonts'), (p) => /\.(woff2?|ttf)$/i.test(p));
+    if (fs.existsSync(fonts)) copyDir(fonts, path.join(root, 'dist', distAdmin, 'vendor', 'fonts'), (p) => /\.(woff2?|ttf)$/i.test(p));
   }
 
   write(`${distAdmin}/vendor/md-math.js`, fs.readFileSync(path.join(root, 'src', 'lib', 'md-math.js'), 'utf8'));
