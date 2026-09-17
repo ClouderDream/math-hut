@@ -1,0 +1,73 @@
+name: Check Local OCR Toolkit
+
+on:
+  push:
+    paths:
+      - 'tools/local-ocr/**'
+      - '.github/workflows/local-ocr-check.yml'
+  pull_request:
+    paths:
+      - 'tools/local-ocr/**'
+      - '.github/workflows/local-ocr-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 检查 Python 语法
+        run: python -m py_compile tools/local-ocr/server.py
+
+      - name: 检查 PowerShell 脚本语法
+        shell: pwsh
+        run: |
+          $failed = $false
+          Get-ChildItem tools/local-ocr -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              Write-Host "PowerShell syntax error: $($_.Name)" -ForegroundColor Red
+              $errors | ForEach-Object { Write-Host $_.Message }
+              $failed = $true
+            }
+          }
+          if ($failed) { exit 1 }
+
+      - name: 检查关键文件与依赖声明
+        shell: python
+        run: |
+          from pathlib import Path
+          root = Path('tools/local-ocr')
+          required = [
+              'server.py', 'requirements.txt', 'install.ps1', 'start.ps1',
+              'stop.ps1', 'update.ps1', 'doctor.ps1', 'bootstrap.ps1',
+              'README.md', 'LOCAL_SETUP_CHECKLIST.md'
+          ]
+          missing = [name for name in required if not (root / name).exists()]
+          if missing:
+              raise SystemExit('missing files: ' + ', '.join(missing))
+          req = (root / 'requirements.txt').read_text(encoding='utf-8')
+          if 'paddleocr[doc-parser]' not in req:
+              raise SystemExit('requirements.txt must include paddleocr[doc-parser] for PP-StructureV3')
+
+      - name: 检查 loopback 安全边界
+        shell: python
+        run: |
+          from pathlib import Path
+          text = (Path('tools/local-ocr') / 'server.py').read_text(encoding='utf-8')
+          if 'host="0.0.0.0"' in text or "host='0.0.0.0'" in text:
+              raise SystemExit('Local OCR must not listen on 0.0.0.0 by default')
+          if '127.0.0.1' not in text:
+              raise SystemExit('Expected loopback-only default host')
