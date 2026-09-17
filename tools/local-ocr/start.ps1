@@ -7,6 +7,8 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Resolve-Path (Join-Path $Root "..\..")
 $VenvPython = Join-Path $Root ".venv\Scripts\python.exe"
+$ModelRoot = Join-Path $Root "models"
+$CacheRoot = Join-Path $Root "cache"
 
 if (!(Test-Path $VenvPython)) {
   Write-Host "未检测到本地 OCR 环境，开始安装..." -ForegroundColor Yellow
@@ -35,7 +37,19 @@ if (!$NoUpdate) {
 }
 
 Set-Location $Root
+New-Item -ItemType Directory -Force -Path $ModelRoot, $CacheRoot | Out-Null
 
+# Keep all model/cache files inside tools/local-ocr so the runtime is portable and
+# never silently fills the user's profile directory. These paths are gitignored.
+$env:PADDLE_PDX_CACHE_HOME = $ModelRoot
+$env:PADDLE_PDX_MODEL_SOURCE = "BOS"
+$env:HF_HOME = Join-Path $ModelRoot "huggingface"
+$env:HF_HUB_CACHE = Join-Path $ModelRoot "huggingface\hub"
+$env:MODELSCOPE_CACHE = Join-Path $ModelRoot "modelscope"
+$env:XDG_CACHE_HOME = $CacheRoot
+
+Write-Host "模型缓存：$ModelRoot"
+Write-Host "优先模型源：Paddle BOS"
 Write-Host "检查服务端口 8765..."
 try {
   $health = Invoke-RestMethod -Uri "http://127.0.0.1:8765/health" -TimeoutSec 2
