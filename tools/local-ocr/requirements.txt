@@ -5,4 +5,7 @@ Pillow>=11,<13
 numpy>=1.26,<3
 opencv-python-headless>=4.11,<5
 paddleocr[doc-parser]>=3.3,<4
-paddlepaddle>=3.2,<4
+# PaddlePaddle 3.3.x currently triggers a CPU oneDNN/PIR regression with PP-StructureV3/PP-OCRv5
+# (ConvertPirAttribute2RuntimeAttribute ... ArrayAttribute<DoubleAttribute>).
+# Keep the local OCR runtime on the known-compatible 3.2.2 line until upstream releases a verified fix.
+paddlepaddle==3.2.2
