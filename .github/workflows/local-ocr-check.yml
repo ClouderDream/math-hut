@@ -61,6 +61,8 @@ jobs:
           req = (root / 'requirements.txt').read_text(encoding='utf-8')
           if 'paddleocr[doc-parser]' not in req:
               raise SystemExit('requirements.txt must include paddleocr[doc-parser] for PP-StructureV3')
+          if 'paddlepaddle==3.2.2' not in req:
+              raise SystemExit('requirements.txt must pin paddlepaddle==3.2.2 to avoid the current CPU oneDNN/PIR regression in 3.3.x')
 
       - name: 检查 loopback 安全边界
         shell: python
