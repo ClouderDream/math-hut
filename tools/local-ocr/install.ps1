@@ -62,8 +62,17 @@ Write-Host "升级 pip..."
 if ($LASTEXITCODE -ne 0) { throw "升级 pip 失败" }
 
 Write-Host "安装 OCR 依赖（首次可能需要较长时间）..."
+Write-Host "说明：CPU OCR 当前固定 PaddlePaddle 3.2.2，以规避 3.3.x oneDNN/PIR 已知回归。" -ForegroundColor Yellow
 & $VenvPython -m pip install -r requirements.txt
 if ($LASTEXITCODE -ne 0) { throw "安装 requirements.txt 失败" }
+
+Write-Host "检查 PaddlePaddle 兼容版本..."
+$paddleVersion = (& $VenvPython -c "import paddle; print(paddle.__version__)" 2>&1 | Out-String).Trim()
+if ($LASTEXITCODE -ne 0) { throw "PaddlePaddle 导入失败：$paddleVersion" }
+if ($paddleVersion -ne "3.2.2") {
+  throw "PaddlePaddle 版本不兼容：当前 $paddleVersion，项目要求 3.2.2。请重新运行 install.ps1 -Force。"
+}
+Write-Host "PaddlePaddle：$paddleVersion" -ForegroundColor Green
 
 Write-Host "检查 Python 源码..."
 & $VenvPython -m py_compile server.py
