@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+logs/
+cache/
+models/
+output/
+config.local.yaml
+config.local.json
+.env
