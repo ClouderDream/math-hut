@@ -2,45 +2,73 @@
 
 数学与物理主题的静态博客（部署于 GitHub Pages：`https://clouderdream.github.io/math-hut/`）。
 
+## 当前版本
+
+- `v1.3/`：当前**活跃版本**，GitHub Pages 构建与后台管理均以此目录为准。
+- `v1.2/`、`v1.1/`、`v1.0/`：历史版本，保留用于追溯与回滚。
+- [`VERSION_HISTORY.md`](VERSION_HISTORY.md)：项目长期版本日志，记录每轮重要改动、Bug、修复、架构、希望长期保留的设计原则，以及 V2.x / V3.x 演进条件。
+
 ## 目录约定
 
 | 目录 | 用途 |
 |------|------|
-| `v1.1/` | 当前**活跃版本**（博客本体）。 |
-| `v1.0/` | 上一个稳定版本，保留不删除。 |
-| `v1.x/tmp/` | 对应版本的中间产物（草稿、截图、临时导出等），不进最终交付。 |
-| `tools/` | 长期复用、跨版本共享的工具/脚本。 |
-| `.github/` | CI 工作流（必在仓库根，GitHub Actions 只认根目录）。 |
+| `v1.3/` | 当前活跃博客源码、内容、后台与构建系统。 |
+| `v1.0/` ~ `v1.2/` | 历史稳定版本，保留不删除。 |
+| `tools/` | 跨版本长期复用的工具，例如 `tools/local-ocr/` 免费本地 OCR 服务。 |
+| `.github/` | CI / GitHub Pages 工作流。 |
 | `.agent` | 项目约定与关键文件索引，供 AI/Agent 快速接手。 |
 
-## 版本内结构（以 v1.1 为例）
+## 当前核心架构
 
+```text
+Markdown / 图片内容
+        ↓
+Node.js + EJS 静态生成器
+        ↓
+v1.3/dist
+        ↓
+GitHub Actions smoke test
+        ↓
+GitHub Pages
 ```
-v1.0/
-  src/            生成器源码（Node + EJS）
-  content/        文章 Markdown 源
-  docs/           设计/技术文档
-  scripts/        辅助脚本（new-post、hash-password…）
-  dist/           构建产物（git 忽略）
-  node_modules/   依赖（git 忽略）
-  .github/        ← 注意：实际 CI 在仓库根 .github/，这里只是源码镜像
-  package.json    构建脚本
-  site.config.js  站点配置
-  GITHUB操作手册.md 部署/维护手册
-  tmp/            中间产物
+
+后台仍是纯静态页面，通过 GitHub API 直接管理仓库内容：
+
+```text
+/admin/
+  ↓
+GitHub PAT
+  ↓
+GitHub Contents API
+  ↓
+main
+  ↓
+Actions 自动构建部署
 ```
+
+OCR 不再要求付费 Mathpix。免费本地方案位于：
+
+```text
+tools/local-ocr/
+```
+
+浏览器后台通过 `http://127.0.0.1:8765` 调用本机 PaddleOCR 服务，图片/PDF 不需要上传第三方 OCR 平台；草图可输出裁切 PNG、基础 SVG 和 TikZ。
 
 ## 构建与部署
 
 ```bash
-cd v1.1
+cd v1.3
 npm ci
-npm run build      # 产物在 v1.1/dist
+npm run build
+npm run test:smoke
 ```
 
-推送 `main` 后由根目录 `.github/workflows/deploy.yml` 自动构建并部署（工作目录 `v1.1`）。
+推送 `main` 后由根目录 `.github/workflows/deploy.yml` 自动构建并部署。
 
-## 其他
+## 维护原则
 
-- 文件按类型归类：文章进 `content/`，源码进 `src/`，文档进 `docs/`，中间产物进对应版本 `tmp/`。
-- 个人凭据（PAT）绝不写入任何文件/日志/记忆，仅临时内嵌用于 push 命令。
+- 文章进 `content/`，源码进 `src/`，版本专属文档进 `docs/`，跨版本工具进 `tools/`。
+- 重大修改前保留回滚分支。
+- 个人凭据（GitHub PAT 等）绝不提交到仓库。
+- 数学 OCR 结果只生成初稿，必须人工校对后再发布。
+- 草图 TikZ 无法可靠结构化时，优先回退为 SVG 或裁切图，不生成看似整洁但语义错误的代码。
