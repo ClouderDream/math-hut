@@ -64,6 +64,27 @@ jobs:
           if 'paddlepaddle==3.2.2' not in req:
               raise SystemExit('requirements.txt must pin paddlepaddle==3.2.2 to avoid the current CPU oneDNN/PIR regression in 3.3.x')
 
+      - name: 检查已验收兼容修复
+        shell: python
+        run: |
+          from pathlib import Path
+          root = Path('tools/local-ocr')
+          server = (root / 'server.py').read_text(encoding='utf-8')
+          start = (root / 'start.ps1').read_text(encoding='utf-8')
+          stop = (root / 'stop.ps1').read_text(encoding='utf-8')
+
+          checks = {
+              'Starlette Private Network Access': 'allow_private_network=True' in server,
+              'PaddleX markdown_texts compatibility': 'markdown_texts' in server,
+              'Project-local PaddleX cache': 'PADDLE_PDX_CACHE_HOME' in start,
+              'Paddle BOS preferred source': 'PADDLE_PDX_MODEL_SOURCE' in start and 'BOS' in start,
+              'stop.ps1 netstat fallback': 'netstat -ano' in stop,
+              'stop.ps1 avoids reserved $PID variable': 'foreach ($pid ' not in stop.lower(),
+          }
+          failed = [name for name, ok in checks.items() if not ok]
+          if failed:
+              raise SystemExit('missing accepted compatibility fixes: ' + ', '.join(failed))
+
       - name: 检查 loopback 安全边界
         shell: python
         run: |
