@@ -1,0 +1,29 @@
+server:
+  host: 127.0.0.1
+  port: 8765
+  cors_origins:
+    - https://clouderdream.github.io
+    - http://localhost
+    - http://127.0.0.1
+
+ocr:
+  engine: pp-structure-v3
+  max_upload_mb: 40
+  doc_orientation_classify: true
+  doc_unwarping: true
+  textline_orientation: true
+
+formula:
+  engine: builtin
+  unimernet_enabled: false
+
+sketch:
+  mode: conservative
+  default_output: svg
+  tikz_enabled: true
+  max_lines: 80
+  max_circles: 20
+
+runtime:
+  model_cache_dir: auto
+  log_level: info
