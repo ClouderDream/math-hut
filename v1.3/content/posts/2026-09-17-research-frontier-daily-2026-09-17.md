@@ -11,6 +11,10 @@ draft: false
 
 ## 1. DNA 计算机让答案成为热力学平衡态：100-bit 分子计算的新路线
 
+![经典分子计算与热力学有利计算的自由能景观对比](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs41586-026-10996-5/MediaObjects/41586_2026_10996_Fig1_HTML.png)
+
+*图：Stérin et al., Nature (2026), Fig. 1 · [原论文](https://www.nature.com/articles/s41586-026-10996-5) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)*
+
 ### 摘要
 Nature 发表 Scaffolded DNA Computer（SDC）。与依赖持续能量输入和复杂动力学纠错的传统分子计算不同，SDC 将正确输出设计成热力学上最有利的平衡态，让系统在退火过程中自然“滚向”答案。团队验证了 10 类程序，包括乘 3、除 2、8-bit 奇偶校验和 25-bit 加法；规模最高达到约 100-bit 计算。小规模程序可在约 30 秒至 1 分钟内完成，部分程序还能更换输入重复运行多次。
 
