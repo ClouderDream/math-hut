@@ -7,7 +7,7 @@ import os
 import tempfile
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 import cv2
 import numpy as np
@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PIL import Image, ImageOps
 
-app = FastAPI(title="Math Hut Local OCR", version="1.0")
+app = FastAPI(title="Math Hut Local OCR", version="1.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,17 +25,11 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Starlette handles Chromium Private Network Access preflight internally.
+    # This must be enabled here rather than appending the header after the
+    # middleware has already accepted/rejected the OPTIONS request.
+    allow_private_network=True,
 )
-
-
-@app.middleware("http")
-async def private_network_access_header(request, call_next):
-    response = await call_next(request)
-    # Chromium Private Network Access preflight compatibility for a public HTTPS page
-    # talking to loopback localhost.
-    if request.headers.get("access-control-request-private-network") == "true":
-        response.headers["Access-Control-Allow-Private-Network"] = "true"
-    return response
 
 
 @lru_cache(maxsize=1)
@@ -43,7 +37,7 @@ def get_pipeline():
     from paddleocr import PPStructureV3
 
     # PP-StructureV3 includes layout, OCR and formula recognition and can emit Markdown.
-    # Models are downloaded by PaddleOCR on first use and then cached locally.
+    # Models are downloaded by PaddleOCR/PaddleX on first use and then cached locally.
     return PPStructureV3(
         use_doc_orientation_classify=True,
         use_doc_unwarping=True,
@@ -65,31 +59,64 @@ def _suffix(name: str, content_type: str | None) -> str:
     return mapping.get(content_type or "", ".bin")
 
 
+def _markdown_to_text(value: Any) -> str:
+    """Normalize old/new PaddleX Markdown result shapes to plain Markdown text."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (list, tuple)):
+        parts = [_markdown_to_text(item) for item in value]
+        return "\n\n".join(part for part in parts if part).strip()
+    if isinstance(value, dict):
+        # PaddleX 3.7.x uses markdown_texts in MarkdownResult; older versions
+        # have also exposed markdown_text / text / markdown.
+        for key in ("markdown_texts", "markdown_text", "text", "markdown"):
+            if key in value:
+                text = _markdown_to_text(value.get(key))
+                if text:
+                    return text
+        return ""
+
+    # Some result wrappers are Mapping-like but are not literal dict objects.
+    getter = getattr(value, "get", None)
+    if callable(getter):
+        for key in ("markdown_texts", "markdown_text", "text", "markdown"):
+            try:
+                text = _markdown_to_text(getter(key))
+            except Exception:
+                continue
+            if text:
+                return text
+    return ""
+
+
 def _collect_markdown(output, pipeline) -> str:
-    pages = []
+    pages: List[Any] = []
     for res in output:
         md = getattr(res, "markdown", None)
-        if md:
+        if md is None and isinstance(res, dict):
+            md = res
+        if md is not None:
             pages.append(md)
+
     if not pages:
         return ""
+
+    # Prefer PaddleX's own page concatenation so multi-page PDF reading order
+    # remains consistent, but normalize its return type before calling strip().
     try:
-        return pipeline.concatenate_markdown_pages(pages).strip()
+        combined = pipeline.concatenate_markdown_pages(pages)
+        text = _markdown_to_text(combined)
+        if text:
+            return text
     except Exception:
-        texts: List[str] = []
-        for md in pages:
-            if isinstance(md, str):
-                texts.append(md)
-            elif isinstance(md, dict):
-                texts.append(
-                    str(
-                        md.get("markdown_text")
-                        or md.get("text")
-                        or md.get("markdown")
-                        or ""
-                    )
-                )
-        return "\n\n".join(x for x in texts if x).strip()
+        pass
+
+    # Compatibility fallback for PaddleX/PaddleOCR releases that expose
+    # page-level dictionaries or strings directly.
+    texts = [_markdown_to_text(md) for md in pages]
+    return "\n\n".join(text for text in texts if text).strip()
 
 
 @app.get("/health")
@@ -141,18 +168,14 @@ def _crop_image(image: Image.Image, x: float, y: float, w: float, h: float) -> I
     y = max(0.0, min(100.0, y))
     w = max(1.0, min(100.0 - x, w))
     h = max(1.0, min(100.0 - y, h))
-    W, H = image.size
+    width, height = image.size
     box = (
-        int(W * x / 100.0),
-        int(H * y / 100.0),
-        int(W * (x + w) / 100.0),
-        int(H * (y + h) / 100.0),
+        int(width * x / 100.0),
+        int(height * y / 100.0),
+        int(width * (x + w) / 100.0),
+        int(height * (y + h) / 100.0),
     )
     return image.crop(box)
-
-
-def _svg_escape(text: str) -> str:
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _basic_geometry(image: Image.Image):
@@ -188,8 +211,8 @@ def _basic_geometry(image: Image.Image):
     )
     circles = []
     if circles_raw is not None:
-        for c in np.round(circles_raw[0, :20]).astype(int):
-            circles.append(tuple(map(int, c)))
+        for circle in np.round(circles_raw[0, :20]).astype(int):
+            circles.append(tuple(map(int, circle)))
 
     return lines, circles
 
@@ -202,8 +225,8 @@ def _build_svg(width: int, height: int, lines, circles) -> str:
     ]
     for x1, y1, x2, y2 in lines:
         parts.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}"/>')
-    for cx, cy, r in circles:
-        parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r}"/>')
+    for cx, cy, radius in circles:
+        parts.append(f'<circle cx="{cx}" cy="{cy}" r="{radius}"/>')
     parts.extend(["</g>", "</svg>"])
     return "\n".join(parts)
 
@@ -211,17 +234,17 @@ def _build_svg(width: int, height: int, lines, circles) -> str:
 def _build_tikz(width: int, height: int, lines, circles) -> str:
     scale = max(width, height) or 1
 
-    def tx(v):
-        return round(8.0 * v / scale, 3)
+    def tx(value):
+        return round(8.0 * value / scale, 3)
 
-    def ty(v):
-        return round(8.0 * (height - v) / scale, 3)
+    def ty(value):
+        return round(8.0 * (height - value) / scale, 3)
 
     out = ["\\begin{tikzpicture}[line cap=round,line join=round]"]
     for x1, y1, x2, y2 in lines:
         out.append(f"  \\draw ({tx(x1)},{ty(y1)}) -- ({tx(x2)},{ty(y2)});")
-    for cx, cy, r in circles:
-        out.append(f"  \\draw ({tx(cx)},{ty(cy)}) circle ({tx(r)});")
+    for cx, cy, radius in circles:
+        out.append(f"  \\draw ({tx(cx)},{ty(cy)}) circle ({tx(radius)});")
     out.append("\\end{tikzpicture}")
     return "\n".join(out)
 
