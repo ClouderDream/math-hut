@@ -33,6 +33,17 @@ if ($pyOk) {
   }
 
   try {
+    $paddleVersion = (& $VenvPython -c "import paddle; print(paddle.__version__)" 2>&1 | Out-String).Trim()
+    $paddleOk = ($LASTEXITCODE -eq 0 -and $paddleVersion -eq "3.2.2")
+    Show-Check "PaddlePaddle 兼容版本" $paddleOk ($(if($paddleOk){"3.2.2（已固定，规避 CPU oneDNN/PIR 回归）"}else{"当前 $paddleVersion；项目要求 3.2.2"}))
+    if (-not $paddleOk) {
+      Write-Host "       修复：运行 .\install.ps1 -Force，或在 .venv 中执行 pip install --force-reinstall paddlepaddle==3.2.2" -ForegroundColor Yellow
+    }
+  } catch {
+    Show-Check "PaddlePaddle 兼容版本" $false $_.Exception.Message
+  }
+
+  try {
     & $VenvPython -m py_compile (Join-Path $Root "server.py")
     Show-Check "server.py" ($LASTEXITCODE -eq 0) "语法正常"
   } catch { Show-Check "server.py" $false $_.Exception.Message }
@@ -47,4 +58,4 @@ try {
 
 Write-Host ""
 Write-Host "若只缺服务，请运行：.\start.ps1" -ForegroundColor Cyan
-Write-Host "若依赖损坏，请运行：.\install.ps1 -Force" -ForegroundColor Cyan
+Write-Host "若依赖损坏或 PaddlePaddle 版本不兼容，请运行：.\install.ps1 -Force" -ForegroundColor Cyan
