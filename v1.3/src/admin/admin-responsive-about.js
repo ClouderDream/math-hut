@@ -1,6 +1,7 @@
 /** 后台响应式与“关于”入口修复：不同分辨率稳定布局；页面 Tab 直接作为关于页入口。 */
 (function () {
   function $(id) { return document.getElementById(id); }
+  var aboutOpenTimer = null;
 
   function addStyle() {
     if ($('adminResponsiveAboutStyle')) return;
@@ -103,11 +104,12 @@
 
   function renamePagesTab() {
     var tab = document.querySelector('.tab[data-tab="pages"]');
-    if (tab) {
-      tab.textContent = '关于';
-      tab.setAttribute('aria-label', '编辑关于本站');
-      tab.title = '编辑关于本站';
-    }
+    if (!tab) return;
+    // 只在值真的变化时写 DOM。此前这里无条件写 textContent，配合监听 tabs 子树的
+    // MutationObserver 会形成“修改 → observer → 再修改”的无限循环，导致浏览器内存暴涨。
+    if ((tab.textContent || '').trim() !== '关于') tab.textContent = '关于';
+    if (tab.getAttribute('aria-label') !== '编辑关于本站') tab.setAttribute('aria-label', '编辑关于本站');
+    if (tab.title !== '编辑关于本站') tab.title = '编辑关于本站';
   }
 
   function setAboutMode(on) {
@@ -123,42 +125,54 @@
     }
   }
 
+  function stopAboutTimer() {
+    if (aboutOpenTimer) {
+      clearInterval(aboutOpenTimer);
+      aboutOpenTimer = null;
+    }
+  }
+
   function openAboutWhenReady() {
     var list = $('postList');
     if (!list) return;
+    stopAboutTimer();
     var tries = 0;
-    var timer = setInterval(function () {
+    aboutOpenTimer = setInterval(function () {
       tries++;
       var tab = document.querySelector('.tab.active');
-      if (!tab || tab.dataset.tab !== 'pages') { clearInterval(timer); return; }
+      if (!tab || tab.dataset.tab !== 'pages') { stopAboutTimer(); return; }
       var links = Array.from(list.querySelectorAll('a'));
       var about = links.find(function (a) {
         var raw = ((a.title || '') + ' ' + (a.textContent || '')).toLowerCase();
         return raw.indexOf('about.md') >= 0 || raw.indexOf('关于') >= 0;
       });
       if (about) {
-        clearInterval(timer);
+        stopAboutTimer();
         about.click();
         setTimeout(function () {
           if ($('headerTitle')) $('headerTitle').textContent = '关于本站';
         }, 0);
-      } else if (tries >= 30) clearInterval(timer);
+      } else if (tries >= 30) stopAboutTimer();
     }, 100);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
     addStyle();
     renamePagesTab();
+
     document.addEventListener('click', function (ev) {
       var tab = ev.target && ev.target.closest ? ev.target.closest('.tab[data-tab]') : null;
       if (!tab) return;
       var isAbout = tab.dataset.tab === 'pages';
+      if (!isAbout) stopAboutTimer();
       setTimeout(function () {
         setAboutMode(isAbout);
         if (isAbout) openAboutWhenReady();
       }, 0);
     }, true);
-    var tabs = document.querySelector('.admin-header .tabs');
-    if (tabs) new MutationObserver(renamePagesTab).observe(tabs, { childList: true, subtree: true, characterData: true });
+
+    // 不再监听整个 tabs 子树。OCR/简报/快捷键 Tab 都只会“新增兄弟节点”，不会替换 pages Tab；
+    // 因此一次命名即可，避免任何 DOM mutation 自反馈风险。
+    window.addEventListener('pagehide', stopAboutTimer, { once: true });
   });
 })();
