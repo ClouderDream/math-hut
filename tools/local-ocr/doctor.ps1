@@ -33,7 +33,9 @@ if ($pyOk) {
   }
 
   try {
-    $paddleVersion = (& $VenvPython -c "import paddle; print(paddle.__version__)" 2>&1 | Out-String).Trim()
+    # 不 import paddle 来读取版本。Paddle 导入阶段可能向 stderr 输出 ccache/oneDNN 等提示，
+    # 若把 stderr 合并到 stdout 再做字符串比较，会把一个正常的 3.2.2 环境误判为失败。
+    $paddleVersion = (& $VenvPython -c "from importlib.metadata import version; print(version('paddlepaddle'))" 2>$null | Out-String).Trim()
     $paddleOk = ($LASTEXITCODE -eq 0 -and $paddleVersion -eq "3.2.2")
     Show-Check "PaddlePaddle 兼容版本" $paddleOk ($(if($paddleOk){"3.2.2（已固定，规避 CPU oneDNN/PIR 回归）"}else{"当前 $paddleVersion；项目要求 3.2.2"}))
     if (-not $paddleOk) {
