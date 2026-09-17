@@ -123,10 +123,23 @@ if (exists('assets/css/v14.css') && exists('assets/js/menu.js')) {
   if (!js.includes('mobile-menu-open') || !js.includes("e.key === 'Escape'")) fail('移动菜单 JS 开合/滚动锁定逻辑缺失');
 }
 
+// 6) 后台内存泄漏回归保护
+// 2026-09-17 曾出现 tabs MutationObserver 回调中无条件重写 pages Tab 的 textContent，
+// 写入本身再次触发 observer，形成无限 DOM mutation 循环并把 Edge 内存推到 20GB+。
+if (exists('admin/admin.js')) {
+  const adminJs = read('admin/admin.js');
+  if (/new\s+MutationObserver\s*\(\s*renamePagesTab\s*\)/.test(adminJs)) {
+    fail('后台存在 renamePagesTab MutationObserver，自反馈可能导致内存泄漏');
+  }
+  if (/observe\s*\(\s*tabs\s*,\s*\{[^}]*subtree\s*:\s*true[^}]*characterData\s*:\s*true/i.test(adminJs)) {
+    fail('后台 tabs 存在高风险 subtree+characterData MutationObserver');
+  }
+}
+
 if (errors.length) {
   console.error('\n[smoke failed] ' + errors.length + ' 个问题：');
   errors.forEach((e, i) => console.error((i + 1) + '. ' + e));
   process.exit(1);
 }
 
-console.log('[smoke ok] 关键产物完整；内部引用 ' + checkedRefs + ' 个均有效；科研栏目、后台和移动菜单检查通过。');
+console.log('[smoke ok] 关键产物完整；内部引用 ' + checkedRefs + ' 个均有效；科研栏目、后台内存泄漏保护和移动菜单检查通过。');
