@@ -260,6 +260,46 @@ http://127.0.0.1:8765
 - `<`、`≤`、`>`、`≥`、`-`、`=`、`f`、`f'` 等关键数学符号必须重点人工核对。
 - 草图 TikZ 识别失败时宁可回退到 SVG/裁切图，不生成看似整洁但语义错误的图。
 
+### 2026-09-17 · GitHub 托管 + 本机执行的一键 OCR 工具链
+
+#### 用户目标
+- GitHub 保存本地 OCR 所需代码、脚本、配置模板和版本说明。
+- 用户电脑只负责实际模型推理和模型缓存。
+- 通过 Codex 在指定 Windows 目录一键完成 clone / 安装 / 联调。
+
+#### 实际修改
+- `tools/local-ocr` 增加 `bootstrap.ps1`：可将仓库克隆/更新到指定目录并初始化环境。
+- 增加 `install.ps1/.cmd`：自动寻找 Python 3.11/3.10、创建 `.venv`、安装依赖并做模块校验。
+- 增加 `start.ps1/.cmd`、`stop.ps1/.cmd`、`update.ps1`、`doctor.ps1/.cmd`。
+- 增加 `.gitignore`，排除 `.venv`、模型、缓存、日志和本地配置。
+- 增加 `config.example.yaml`、`.env.example` 与 Windows/Codex/验收说明。
+- `requirements.txt` 改为安装 `paddleocr[doc-parser]`，保证 PP-StructureV3 文档解析能力依赖完整。
+- 增加 `.github/workflows/local-ocr-check.yml`，在 GitHub 自动检查 Python / PowerShell 语法、关键文件、`doc-parser` 依赖与 loopback 安全边界。
+
+#### Bug / 风险
+- 初版 `install.ps1` 对单词命令 `python` 的参数切分可能产生错误数组范围。
+- PP-StructureV3 在新版 PaddleOCR 中属于 `doc-parser` 能力域，只安装基础 `paddleocr` 可能在本机缺少依赖。
+- 为解决浏览器联调问题不能把服务简单改为 `0.0.0.0`，否则会扩大局域网暴露面。
+
+#### 修复方式
+- 重写 Python 启动命令解析，明确兼容 `py -3.11`、`py -3.10` 和 `python`。
+- 安装后强制执行 `py_compile` 与关键模块 import 校验。
+- CI 固化 `127.0.0.1` 默认监听约束。
+- 本地与 GitHub 职责分离：大模型权重不进入 Git，首次使用由官方机制下载到本机缓存。
+
+#### 希望长期保留
+- GitHub 托管“可复现的环境定义”，本机执行实际 AI 推理。
+- OCR 永久保持免费/开源主链路，不回退到必须付费的 API 模式。
+- 本地服务默认 loopback-only。
+- Codex 优先执行仓库现有脚本，不重复另造一套环境。
+- 模型、`.venv`、日志、测试图片、密钥不得进入 Git。
+
+#### 相关文件
+- `tools/local-ocr/`
+- `.github/workflows/local-ocr-check.yml`
+- `tools/local-ocr/CODEX_LOCAL_SETUP_PROMPT.md`
+- `tools/local-ocr/LOCAL_SETUP_CHECKLIST.md`
+
 ---
 
 # V2.x（预留）
