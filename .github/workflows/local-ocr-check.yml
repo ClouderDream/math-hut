@@ -4,12 +4,12 @@ on:
   push:
     paths:
       - 'tools/local-ocr/**'
-      - 'v1.3/src/admin/ocr-workspace.js'
+      - 'v1.4/src/admin/ocr-workspace.js'
       - '.github/workflows/local-ocr-check.yml'
   pull_request:
     paths:
       - 'tools/local-ocr/**'
-      - 'v1.3/src/admin/ocr-workspace.js'
+      - 'v1.4/src/admin/ocr-workspace.js'
       - '.github/workflows/local-ocr-check.yml'
   workflow_dispatch:
 
@@ -92,7 +92,7 @@ jobs:
         run: |
           from pathlib import Path
           server = Path('tools/local-ocr/server.py').read_text(encoding='utf-8')
-          ui = Path('v1.3/src/admin/ocr-workspace.js').read_text(encoding='utf-8')
+          ui = Path('v1.4/src/admin/ocr-workspace.js').read_text(encoding='utf-8')
           checks = {
               'server async OCR start endpoint': '@app.post("/ocr/start")' in server,
               'server async OCR status endpoint': '@app.get("/ocr/status/{job_id}")' in server,
@@ -100,6 +100,9 @@ jobs:
               'browser submits async OCR job': "/ocr/start" in ui,
               'browser polls OCR status': "/ocr/status/" in ui,
               'old 10-minute hard OCR abort removed': "10*60*1000" not in ui and "10 * 60 * 1000" not in ui,
+              'V1.4 dual review layout': 'ocr-result-grid' in ui and 'ocrPreview' in ui,
+              'V1.4 visual crop selector': 'ocr-crop-selection' in ui and 'bindCropSelector' in ui,
+              'V1.4 safe sketch guard': 'vectorizable' in server and 'sketch_guard' in server,
           }
           failed = [name for name, ok in checks.items() if not ok]
           if failed:
