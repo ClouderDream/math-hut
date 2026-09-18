@@ -4,16 +4,16 @@
 
 ## 当前版本
 
-- `v1.3/`：当前**活跃版本**，GitHub Pages 构建与后台管理均以此目录为准。
-- `v1.2/`、`v1.1/`、`v1.0/`：历史版本，保留用于追溯与回滚。
+- `v1.4/`：当前**活跃版本**，GitHub Pages 构建与后台管理均以此目录为准。
+- `v1.3/`、`v1.2/`、`v1.1/`、`v1.0/`：历史稳定版本，保留用于追溯与回滚。
 - [`VERSION_HISTORY.md`](VERSION_HISTORY.md)：项目长期版本日志，记录每轮重要改动、Bug、修复、架构、希望长期保留的设计原则，以及 V2.x / V3.x 演进条件。
 
 ## 目录约定
 
 | 目录 | 用途 |
 |------|------|
-| `v1.3/` | 当前活跃博客源码、内容、后台与构建系统。 |
-| `v1.0/` ~ `v1.2/` | 历史稳定版本，保留不删除。 |
+| `v1.4/` | 当前活跃博客源码、内容、后台与构建系统。 |
+| `v1.0/` ~ `v1.3/` | 历史稳定版本，保留不删除。 |
 | `tools/` | 跨版本长期复用的工具，例如 `tools/local-ocr/` 免费本地 OCR 服务。 |
 | `.github/` | CI / GitHub Pages 工作流。 |
 | `.agent` | 项目约定与关键文件索引，供 AI/Agent 快速接手。 |
@@ -25,7 +25,7 @@ Markdown / 图片内容
         ↓
 Node.js + EJS 静态生成器
         ↓
-v1.3/dist
+v1.4/dist
         ↓
 GitHub Actions smoke test
         ↓
@@ -52,12 +52,12 @@ OCR 不再要求付费 Mathpix。免费本地方案位于：
 tools/local-ocr/
 ```
 
-浏览器后台通过 `http://127.0.0.1:8765` 调用本机 PaddleOCR 服务，图片/PDF 不需要上传第三方 OCR 平台；草图可输出裁切 PNG、基础 SVG 和 TikZ。
+浏览器后台通过 `http://127.0.0.1:8765` 调用本机 PaddleOCR 服务，图片/PDF 不上传第三方 OCR 平台。V1.4 的 OCR 校对区采用 Markdown + 实时预览双栏同步滚动；草图必须先框选真实区域，复杂选区会阻止误导性的 SVG/TikZ 输出。
 
 ## 构建与部署
 
 ```bash
-cd v1.3
+cd v1.4
 npm ci
 npm run build
 npm run test:smoke
