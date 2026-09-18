@@ -300,6 +300,55 @@ http://127.0.0.1:8765
 - `tools/local-ocr/CODEX_LOCAL_SETUP_PROMPT.md`
 - `tools/local-ocr/LOCAL_SETUP_CHECKLIST.md`
 
+
+### 2026-09-18 · 本机 OCR 实测收口与长任务中断修复
+
+#### 用户目标
+- 将本机实际验收通过的 PaddleOCR / PP-StructureV3 修复稳定回灌到 GitHub。
+- 修复 `doctor.ps1` 将正常 PaddlePaddle 3.2.2 误判为失败的问题。
+- 修复复杂整页手写 OCR 等待较久后出现 `signal is aborted without reason`。
+
+#### 实际修改
+- `doctor.ps1` 不再通过 `import paddle; print(paddle.__version__)` 并合并 stderr 读取版本，而改用 `importlib.metadata.version('paddlepaddle')`，避免 ccache/oneDNN 提示污染版本字符串。
+- Local OCR 服务增加异步长任务接口：
+  - `POST /ocr/start` 创建识别任务并立即返回 `job_id`。
+  - `GET /ocr/status/{job_id}` 查询 queued/running/done/error 状态。
+- OCR 使用单 worker 队列，避免同时启动多个完整 PP-StructureV3 推理造成内存峰值叠加。
+- 已完成任务结果保留 1 小时后自动清理，防止 Markdown 结果长期滞留内存。
+- 后台 OCR 页面改为“创建任务 + 状态轮询”，不再依赖一个最长 10 分钟的单次 `fetch('/ocr')`。
+- 状态查询发生短暂网络错误时自动重试，避免误判本机正在运行的任务已经失败。
+- 旧版 Local OCR 服务仍可回退到 `/ocr` 兼容模式，便于网站和本机代码不同步时过渡。
+- Local OCR CI 增加异步任务链路防回归检查。
+
+#### Bug / 风险
+1. `doctor.ps1` 曾使用 `2>&1` 合并 Paddle import 的 stderr，导致 `ccache` 提示和 `3.2.2` 一起参与字符串比较，产生假阴性。
+2. 旧后台将 PP-StructureV3 完整推理塞进一个 10 分钟浏览器请求；复杂手写页在 CPU 上可能超过窗口，前端 `AbortController` 主动终止后只显示模糊的 `signal is aborted without reason`。
+3. 完整 PP-StructureV3 常驻内存较高，不能通过并行启动多个识别任务来“加速”，否则会显著放大内存压力。
+
+#### 修复方式
+- 版本检测读取 Python 包元数据，而不是解析第三方库 import 日志。
+- 长耗时推理从“浏览器长连接”改为“本地任务队列 + 短轮询请求”。
+- PP-StructureV3 保持单 worker 顺序执行；浏览器只负责状态展示与结果校对。
+- CI 固化 `/ocr/start`、`/ocr/status/{job_id}` 和前端轮询链路，阻止重新引入 10 分钟硬中断。
+
+#### 希望长期保留
+- PaddlePaddle CPU 基线继续固定 `3.2.2`，直到上游 3.3.x oneDNN/PIR 回归有明确验证通过的新版本。
+- OCR 结果必须人工校对后再进入文章。
+- 本地服务仍只监听 `127.0.0.1`。
+- 高内存模型采用单任务队列，不用并发推理换取表面速度。
+- 长任务 UI 必须采用可恢复/可轮询状态，不再让浏览器超时决定推理生命周期。
+
+#### 相关文件
+- `tools/local-ocr/server.py`
+- `tools/local-ocr/doctor.ps1`
+- `tools/local-ocr/README-TROUBLESHOOTING.md`
+- `v1.3/src/admin/ocr-workspace.js`
+- `.github/workflows/local-ocr-check.yml`
+
+#### 回滚点
+- `restore-before-doctor-version-fix-2026-09-17`
+- `restore-before-ocr-job-fix-2026-09-18`
+
 ---
 
 # V2.x（预留）
