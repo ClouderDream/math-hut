@@ -58,10 +58,10 @@ module.exports = {
     owner: 'ClouderDream',
     repo: 'math-hut',
     branch: 'main',
-    postsDir: 'v1.3/content/posts',
-    pagesDir: 'v1.3/content/pages',
-    imagesDir: 'v1.3/content/images',
-    siteConfigPath: 'v1.3/content/site.json',
+    postsDir: 'v1.4/content/posts',
+    pagesDir: 'v1.4/content/pages',
+    imagesDir: 'v1.4/content/images',
+    siteConfigPath: 'v1.4/content/site.json',
     // 管理口令的 SHA-256 哈希 + 盐。
     // 生成方法：在项目目录运行 npm run hash-password 你的口令，再替换下面两行。
     // 这只是“防误点”的门槛；真正的权限边界是 GitHub Token。
