@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - 'tools/local-ocr/**'
+      - 'v1.3/src/admin/ocr-workspace.js'
       - '.github/workflows/local-ocr-check.yml'
   pull_request:
     paths:
       - 'tools/local-ocr/**'
+      - 'v1.3/src/admin/ocr-workspace.js'
       - '.github/workflows/local-ocr-check.yml'
   workflow_dispatch:
 
@@ -84,6 +86,24 @@ jobs:
           failed = [name for name, ok in checks.items() if not ok]
           if failed:
               raise SystemExit('missing accepted compatibility fixes: ' + ', '.join(failed))
+
+      - name: 检查 OCR 长任务防中断链路
+        shell: python
+        run: |
+          from pathlib import Path
+          server = Path('tools/local-ocr/server.py').read_text(encoding='utf-8')
+          ui = Path('v1.3/src/admin/ocr-workspace.js').read_text(encoding='utf-8')
+          checks = {
+              'server async OCR start endpoint': '@app.post("/ocr/start")' in server,
+              'server async OCR status endpoint': '@app.get("/ocr/status/{job_id}")' in server,
+              'single-worker OCR queue': 'ThreadPoolExecutor(max_workers=1' in server,
+              'browser submits async OCR job': "/ocr/start" in ui,
+              'browser polls OCR status': "/ocr/status/" in ui,
+              'old 10-minute hard OCR abort removed': "10*60*1000" not in ui and "10 * 60 * 1000" not in ui,
+          }
+          failed = [name for name, ok in checks.items() if not ok]
+          if failed:
+              raise SystemExit('OCR long-task regression: ' + ', '.join(failed))
 
       - name: 检查 loopback 安全边界
         shell: python
