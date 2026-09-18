@@ -258,7 +258,8 @@ def health():
         "engine": "PaddleOCR PP-StructureV3",
         "paid_api": False,
         "sketch": True,
-        "async_jobs": True,\n        "sketch_guard": True,
+        "async_jobs": True,
+        "sketch_guard": True,
     }
 
 
@@ -417,6 +418,7 @@ def _basic_geometry(image: Image.Image):
     analysis["lines"] = len(lines)
     analysis["circles"] = len(circles)
     return lines, circles, analysis
+
 
 def _build_svg(width: int, height: int, lines, circles) -> str:
     parts = [
