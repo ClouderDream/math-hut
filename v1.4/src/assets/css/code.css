@@ -1,0 +1,115 @@
+/* ============================================================
+   代码块样式：配色跟随明暗主题（CSS 变量），构建期高亮，运行期零 JS 依赖
+   ============================================================ */
+
+:root {
+  --code-bg: #f6f8fa;
+  --code-head-bg: #eef1f4;
+  --code-fg: #24292e;
+  --code-border: #e3e6ea;
+  --code-line-num: #b8c0c8;
+  --hl-comment: #6a737d;
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-number: #0550ae;
+  --hl-func: #8250df;
+  --hl-type: #953800;
+  --hl-tag: #116329;
+  --hl-attr: #0550ae;
+}
+
+[data-theme="dark"] {
+  --code-bg: #161b22;
+  --code-head-bg: #1f242b;
+  --code-fg: #e6edf3;
+  --code-border: #2a2f35;
+  --code-line-num: #4d5660;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-func: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-tag: #7ee787;
+  --hl-attr: #79c0ff;
+}
+
+.code-block {
+  margin: 1.6em 0;
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--code-bg);
+}
+
+.code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--code-head-bg);
+  border-bottom: 1px solid var(--code-border);
+}
+.code-lang {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--fg-muted); letter-spacing: .03em;
+}
+.code-copy {
+  border: none; background: transparent; cursor: pointer;
+  color: var(--fg-muted); font-size: 12px; font-family: inherit;
+  padding: 3px 8px; border-radius: 5px;
+}
+.code-copy:hover { background: var(--bg); color: var(--accent); }
+.code-copy.done { color: #1a7f37; }
+
+.code-pre {
+  margin: 0; padding: 14px 0; overflow-x: auto;
+  background: transparent;
+}
+.code-pre code {
+  display: block; font-family: var(--font-mono);
+  font-size: 13.5px; line-height: 1.75; color: var(--code-fg);
+  background: transparent; border: none; padding: 0;
+}
+
+/* 行号：纯 CSS 计数器，不需要额外 DOM */
+.code-line {
+  display: block; position: relative;
+  padding: 0 16px 0 56px;
+}
+.code-line::before {
+  content: counter(code-line);
+  counter-increment: code-line;
+  position: absolute; left: 0; top: 0;
+  width: 40px; text-align: right;
+  color: var(--code-line-num);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.code-pre code { counter-reset: code-line; }
+
+/* 无行号模式（给不需要行号的长代码块） */
+.code-block.no-line-numbers .code-line { padding-left: 16px; }
+.code-block.no-line-numbers .code-line::before { display: none; }
+
+/* ---------------- 语法高亮配色 ---------------- */
+.hljs-comment, .hljs-quote { color: var(--hl-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: var(--hl-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition, .hljs-meta .hljs-string { color: var(--hl-string); }
+.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-link { color: var(--hl-number); }
+.hljs-title, .hljs-title.function_, .hljs-section, .hljs-name { color: var(--hl-func); }
+.hljs-type, .hljs-class .hljs-title, .hljs-built_in, .hljs-builtin-name { color: var(--hl-type); }
+.hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable { color: var(--hl-attr); }
+.hljs-tag { color: var(--hl-tag); }
+.hljs-deletion { color: var(--hl-keyword); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
+
+/* 行内代码（不放进 .code-block 的） */
+.post-content :not(pre) > code { color: var(--code-fg); }
+
+/* 预览区（后台）里的代码块简化显示 */
+.preview pre {
+  background: var(--code-bg); border: 1px solid var(--code-border);
+  border-radius: var(--radius-sm); padding: 12px 14px; overflow-x: auto;
+  font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+}
+.preview pre code { display: block; }

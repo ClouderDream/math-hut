@@ -1,0 +1,200 @@
+/**
+ * GitHub Contents API 封装（浏览器端）
+ *
+ * 凭据策略：
+ * - sessionStorage 始终保存当前会话的 Token
+ * - 勾选「信任此电脑 30 天」后，Token 额外写入 localStorage 并记录 expires
+ * - 过期、主动退出、GitHub 401/403 任一情况都自动 clearToken
+ * - 不保存管理口令明文
+ *
+ * 文件移动策略：后台旧逻辑会先 remove(old) 再 save(new)。这里把“重命名/移动”删除延迟到
+ * 新文件成功写入之后执行，避免第二步失败导致原稿被删除。
+ */
+(function () {
+  var H = window.__HUT__ || {};
+  var API = 'https://api.github.com';
+
+  var TOKEN_KEY = 'hut_token';
+  var EXPIRES_KEY = 'hut_token_expires';
+  var TRUST_DAYS = 30;
+  var pendingMoveDelete = null;
+
+  function getToken() {
+    try {
+      var sessionToken = sessionStorage.getItem(TOKEN_KEY);
+      if (sessionToken) return sessionToken;
+
+      var token = localStorage.getItem(TOKEN_KEY);
+      var expires = Number(localStorage.getItem(EXPIRES_KEY) || 0);
+      if (!token) return '';
+      if (!expires || Date.now() > expires) {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(EXPIRES_KEY);
+        return '';
+      }
+      sessionStorage.setItem(TOKEN_KEY, token);
+      return token;
+    } catch (e) { return ''; }
+  }
+
+  function setToken(t, remember) {
+    try {
+      sessionStorage.setItem(TOKEN_KEY, t);
+      if (remember) {
+        var expires = Date.now() + TRUST_DAYS * 24 * 60 * 60 * 1000;
+        localStorage.setItem(TOKEN_KEY, t);
+        localStorage.setItem(EXPIRES_KEY, String(expires));
+      } else {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(EXPIRES_KEY);
+      }
+    } catch (e) {}
+  }
+
+  function clearToken() {
+    try {
+      sessionStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(EXPIRES_KEY);
+    } catch (e) {}
+  }
+
+  function trustInfo() {
+    try {
+      var expires = Number(localStorage.getItem(EXPIRES_KEY) || 0);
+      if (!expires) return { active: false };
+      var remaining = expires - Date.now();
+      return {
+        active: remaining > 0,
+        expiresAt: expires,
+        remainingDays: Math.max(0, Math.ceil(remaining / (24 * 60 * 60 * 1000))),
+      };
+    } catch (e) { return { active: false }; }
+  }
+
+  function headers() {
+    return {
+      Authorization: 'Bearer ' + getToken(),
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    };
+  }
+
+  function encPath(p) { return String(p).split('/').map(encodeURIComponent).join('/'); }
+
+  function b64enc(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function b64dec(b64) {
+    var bin = atob(String(b64).replace(/\n/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  async function req(url, options) {
+    options = options || {};
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 20000);
+    options.signal = controller.signal;
+    try {
+      var res = await fetch(url, options);
+      clearTimeout(timer);
+      var json = null;
+      try { json = await res.json(); } catch (e) {}
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) clearToken();
+        var msg = (json && json.message) || ('HTTP ' + res.status);
+        var err = new Error(msg);
+        err.status = res.status;
+        throw err;
+      }
+      return json;
+    } catch (e) {
+      clearTimeout(timer);
+      if (e.name === 'AbortError') {
+        var toErr = new Error('请求超时（20s），请检查网络连接或稍后重试');
+        toErr.status = 0;
+        throw toErr;
+      }
+      throw e;
+    }
+  }
+
+  var base = function () { return API + '/repos/' + H.owner + '/' + H.repo + '/contents/'; };
+
+  async function listDir(dir) {
+    var j = await req(base() + encPath(dir) + '?ref=' + encodeURIComponent(H.branch), { headers: headers() });
+    return Array.isArray(j) ? j : [];
+  }
+
+  async function read(path) {
+    var j = await req(base() + encPath(path) + '?ref=' + encodeURIComponent(H.branch), { headers: headers() });
+    return { text: b64dec(j.content || ''), sha: j.sha };
+  }
+
+  async function removeNow(path, sha, message) {
+    await req(base() + encPath(path), {
+      method: 'DELETE',
+      headers: headers(),
+      body: JSON.stringify({ message: message, sha: sha, branch: H.branch }),
+    });
+  }
+
+  async function save(path, text, sha, message) {
+    var body = { message: message, content: b64enc(text), branch: H.branch };
+    if (sha) body.sha = sha;
+    var pending = (!sha && pendingMoveDelete) ? pendingMoveDelete : null;
+    var j;
+    try {
+      j = await req(base() + encPath(path), { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
+    } catch (e) {
+      if (pending) pendingMoveDelete = null;
+      throw e;
+    }
+
+    var result = { sha: j.content && j.content.sha, commit: j.commit && j.commit.sha };
+    if (pending) {
+      pendingMoveDelete = null;
+      try {
+        await removeNow(pending.path, pending.sha, pending.message);
+      } catch (e) {
+        console.warn('[math-hut] 新文件已保存，但旧文件删除失败：', pending.path, e);
+        try {
+          window.dispatchEvent(new CustomEvent('hut:move-warning', { detail: { oldPath: pending.path, message: e.message || String(e) } }));
+        } catch (_) {}
+      }
+    }
+    return result;
+  }
+
+  async function remove(path, sha, message) {
+    if (String(message || '').indexOf('重命名/移动：') === 0) {
+      pendingMoveDelete = { path: path, sha: sha, message: message };
+      return { deferred: true };
+    }
+    return removeNow(path, sha, message);
+  }
+
+  async function saveBinary(path, b64content, sha, message) {
+    var body = { message: message, content: b64content, branch: H.branch };
+    if (sha) body.sha = sha;
+    var j = await req(base() + encPath(path), { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
+    return { sha: j.content && j.content.sha, commit: j.commit && j.commit.sha };
+  }
+
+  async function verify() {
+    var j = await req(API + '/repos/' + H.owner + '/' + H.repo, { headers: headers() });
+    return j && j.full_name ? j.full_name : '';
+  }
+
+  window.GH = {
+    listDir: listDir, read: read, save: save, remove: remove, saveBinary: saveBinary, verify: verify,
+    getToken: getToken, setToken: setToken, clearToken: clearToken, trustInfo: trustInfo,
+    config: H,
+  };
+})();

@@ -1,0 +1,13 @@
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <span><%= site.copyright %><% if (site.footerTagline) { %> · <%= site.footerTagline %><% } %></span>
+    <span><%= site.footerPowered || '由 GitHub Pages 驱动 · 极简编辑风' %></span>
+  </div>
+</footer>
+
+<script src="<%= u('assets/js/menu.js') %>?v=<%= v %>"></script>
+<script src="<%= u('assets/js/code.js') %>?v=<%= v %>"></script>
+<script src="<%= u('assets/js/progress.js') %>?v=<%= v %>"></script>
+<script src="<%= u('assets/js/search.js') %>?v=<%= v %>" defer></script>
+</body>
+</html>

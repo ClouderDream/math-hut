@@ -1,0 +1,63 @@
+<!-- 顶部 banner：蓝底白字；后台可设置 site.banner 全宽头图 -->
+<header class="banner" role="banner">
+  <% if (site.banner) { %>
+    <img class="banner-img" src="<%= u(site.banner) %>" alt="">
+  <% } %>
+  <div class="banner-inner">
+    <a class="banner-brand" href="<%= u('/') %>">
+      <div class="banner-text">
+        <h1><%= site.title %></h1>
+        <p><%= site.subtitle %></p>
+      </div>
+    </a>
+  </div>
+</header>
+
+<!-- 蓝色水平导航，带下拉 -->
+<nav class="nav-bar" role="navigation" aria-label="主导航">
+  <div class="nav-inner">
+    <button class="menu-btn" type="button" id="menuToggle" aria-label="打开菜单" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <ul class="main-nav" id="siteNav">
+      <li><a href="<%= u('/') %>" class="<%= currentPath === u('/') ? 'active' : '' %>">首页</a></li>
+
+      <li class="has-sub">
+        <a href="<%= u('page/2/') %>">笔记<span class="caret">▾</span></a>
+        <ul class="sub-menu">
+          <% (recentPosts || []).forEach(function (p) { %>
+            <li><a href="<%= p.url %>"><%= p.title %></a></li>
+          <% }); %>
+          <% if (!recentPosts || !recentPosts.length) { %>
+            <li><a href="<%= u('/') %>">还没有文章</a></li>
+          <% } %>
+        </ul>
+      </li>
+
+      <li class="has-sub">
+        <a href="<%= u('tags/') %>">标签<span class="caret">▾</span></a>
+        <ul class="sub-menu">
+          <% (topTags || []).forEach(function (t) { %>
+            <li><a href="<%= u('tags/' + encodeURIComponent(t.name) + '/') %>"><%= t.name %> <small style="opacity:.75">(<%= t.count %>)</small></a></li>
+          <% }); %>
+          <li><a href="<%= u('tags/') %>">查看全部…</a></li>
+        </ul>
+      </li>
+
+      <li><a href="<%= u('archive/') %>" class="<%= currentPath === u('archive/') ? 'active' : '' %>">归档</a></li>
+      <li><a href="<%= u('about/') %>" class="<%= currentPath === u('about/') ? 'active' : '' %>">关于</a></li>
+    </ul>
+
+    <form class="nav-search" action="<%= u('search/') %>" method="get" role="search" aria-label="站内搜索">
+      <input type="search" name="q" placeholder="搜索…" autocomplete="off" aria-label="搜索关键词">
+      <button type="submit" aria-label="搜索">搜</button>
+    </form>
+
+    <div class="nav-actions">
+      <button class="icon-btn" type="button" id="themeToggle" aria-label="切换明暗主题" title="切换主题">
+        <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></g></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>

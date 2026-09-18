@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title><%= pageTitle %></title>
+<meta name="description" content="<%= pageDesc %>">
+<meta name="author" content="<%= site.author %>">
+<% if (typeof noindex !== 'undefined' && noindex) { %><meta name="robots" content="noindex, nofollow"><% } %>
+<link rel="canonical" href="<%= canonical %>">
+<meta property="og:type" content="<%= ogType || 'website' %>">
+<meta property="og:title" content="<%= pageTitle %>">
+<meta property="og:description" content="<%= pageDesc %>">
+<meta property="og:url" content="<%= canonical %>">
+<meta property="og:site_name" content="<%= site.title %>">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="<%= u('assets/img/favicon.svg') %>" type="image/svg+xml">
+<% if (cfg.feed.enableRSS) { %><link rel="alternate" type="application/rss+xml" title="<%= site.title %>" href="<%= u('rss.xml') %>"><% } %>
+<link rel="stylesheet" href="<%= u('assets/css/katex.min.css') %>?v=<%= v %>">
+<link rel="stylesheet" href="<%= u('assets/css/main.css') %>?v=<%= v %>">
+<link rel="stylesheet" href="<%= u('assets/css/code.css') %>?v=<%= v %>">
+<script>
+/* 防闪烁：必须在任何内容渲染前同步设置主题 */
+(function () {
+  try {
+    var t = localStorage.getItem('theme');
+    if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body class="site-body">
+<div class="read-progress" id="readProgress" aria-hidden="true"></div>
+<a class="skip-link" href="#main" style="position:absolute;left:-9999px;top:0;background:#1e73be;color:#fff;padding:6px 12px;z-index:999">跳到正文</a>

@@ -1,0 +1,41 @@
+<!-- 侧栏：极简编辑风的卡片式挂件 -->
+<aside class="sidebar" aria-label="侧边栏">
+  <div class="wd">
+    <h5>关于小屋</h5>
+    <p><%= site.description %></p>
+    <p class="wd-link"><a href="<%= u('about/') %>">了解更多 →</a></p>
+  </div>
+
+  <div class="wd">
+    <h5>标签</h5>
+    <div class="tagcloud">
+      <% (topTags || []).forEach(function (t) { %>
+        <a href="<%= u('tags/' + encodeURIComponent(t.name) + '/') %>"><%= t.name %></a>
+      <% }); %>
+      <% if (!topTags || !topTags.length) { %>
+        <span class="wd-empty">暂无标签</span>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="wd">
+    <h5>近期更新</h5>
+    <ul class="recent">
+      <% (recentPosts || []).slice(0, 5).forEach(function (p) { %>
+        <li><a href="<%= p.url %>"><span class="recent-date"><%= p.date.slice(5) %></span><%= p.title %></a></li>
+      <% }); %>
+      <% if (!recentPosts || !recentPosts.length) { %>
+        <li class="wd-empty">还没有文章</li>
+      <% } %>
+    </ul>
+  </div>
+
+  <div class="wd">
+    <h5>订阅</h5>
+    <ul class="recent">
+      <% if (cfg.feed.enableRSS) { %><li><a href="<%= u('rss.xml') %>">RSS 订阅</a></li><% } %>
+      <li><a href="<%= u('sitemap.xml') %>">站点地图</a></li>
+      <li><a href="<%= u('archive/') %>">全部归档</a></li>
+    </ul>
+  </div>
+</aside>

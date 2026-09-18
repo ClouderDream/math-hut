@@ -1,0 +1,69 @@
+<!-- 左侧 widget 侧边栏 -->
+<aside class="sidebar" aria-label="侧边栏">
+  <section class="widget">
+    <h3 class="widget-title">最近文章</h3>
+    <div class="widget-body">
+      <ul>
+        <% (recentPosts || []).forEach(function (p) { %>
+          <li>
+            <span class="post-date"><%= p.date.slice(5) %></span>
+            <a href="<%= p.url %>"><%= p.title %></a>
+          </li>
+        <% }); %>
+        <% if (!recentPosts || !recentPosts.length) { %>
+          <li style="color:var(--fg-faint)">还没有文章</li>
+        <% } %>
+      </ul>
+    </div>
+  </section>
+
+  <section class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <div class="tag-cloud">
+        <% (topTags || []).forEach(function (t) { %>
+          <a href="<%= u('tags/' + encodeURIComponent(t.name) + '/') %>"><%= t.name %></a>
+        <% }); %>
+        <% if (!topTags || !topTags.length) { %>
+          <span style="color:var(--fg-faint)">无标签</span>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <section class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul>
+        <% (archiveMonths || []).forEach(function (g) { %>
+          <% g.posts.forEach(function (p) { %>
+            <li><a href="<%= p.url %>"><%= p.date.slice(0,7).replace('-','年') + '月' %> · <%= p.title %></a></li>
+          <% }); %>
+        <% }); %>
+        <% if (!archiveMonths || !archiveMonths.length) { %>
+          <li style="color:var(--fg-faint)">无归档</li>
+        <% } %>
+      </ul>
+      <p style="margin-top:8px"><a href="<%= u('archive/') %>">查看完整归档 →</a></p>
+    </div>
+  </section>
+
+  <section class="widget">
+    <h3 class="widget-title">关于本站</h3>
+    <div class="widget-body widget-text">
+      <p>这里是「<%= site.title %>」，记录数学与物理的学习笔记。</p>
+      <p>公式用 KaTeX 构建期预渲染，读者端零 JS。</p>
+      <p><a href="<%= u('about/') %>">了解更多 →</a></p>
+    </div>
+  </section>
+
+  <section class="widget">
+    <h3 class="widget-title">订阅</h3>
+    <div class="widget-body">
+      <ul>
+        <% if (cfg.feed.enableRSS) { %><li><a href="<%= u('rss.xml') %>">RSS 订阅</a></li><% } %>
+        <li><a href="<%= u('sitemap.xml') %>">站点地图</a></li>
+      </ul>
+    </div>
+  </section>
+</aside>

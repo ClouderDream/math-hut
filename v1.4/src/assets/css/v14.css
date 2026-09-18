@@ -1,0 +1,54 @@
+/* v1.4/v1.7 responsive layout + subtle mathematics ambience */
+.menu-toggle{display:none;margin-left:auto;width:40px;height:40px;border:1px solid var(--line-strong);border-radius:50%;background:transparent;color:var(--ink);font-size:18px;line-height:1;cursor:pointer}.mobile-search-link{display:none}.hero h1{white-space:pre-line}
+
+/* 数学/物理水印：保持克制，但从原来的几乎不可见提高到约 6%–9%。 */
+.math-ambient{position:fixed;inset:0;overflow:hidden;pointer-events:none;user-select:none;z-index:0;color:var(--accent)}
+.math-mark{position:absolute;font-family:"Fraunces","Noto Serif SC",Georgia,serif;font-weight:400;white-space:nowrap;opacity:.075;line-height:1;transform:rotate(-7deg)}
+.mm-1{left:2.5vw;top:14vh;font-size:92px;opacity:.06}.mm-2{right:4vw;top:9vh;font-size:78px;opacity:.065;transform:rotate(8deg)}
+.mm-3{left:5vw;top:52vh;font-size:36px;opacity:.08;transform:rotate(-4deg)}.mm-4{right:7vw;top:39vh;font-size:48px;opacity:.085;transform:rotate(6deg)}
+.mm-5{left:44vw;top:20vh;font-size:68px;opacity:.06;transform:rotate(2deg)}.mm-6{right:3vw;bottom:11vh;font-size:28px;opacity:.09;transform:rotate(-5deg)}
+.mm-7{left:10vw;bottom:8vh;font-size:34px;opacity:.075;transform:rotate(5deg)}.mm-8{left:52vw;bottom:27vh;font-size:29px;opacity:.075;transform:rotate(-8deg)}
+.site-body>.site-nav,.site-body>.hero,.site-body>main,.site-body>.site-footer{position:relative;z-index:1}
+
+@media(max-width:1050px){.layout:not(.layout-post){grid-template-columns:1fr;gap:40px}.layout:not(.layout-post) .sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.layout:not(.layout-post) .sidebar .wd{margin-bottom:0}}
+
+@media(max-width:860px){
+  body.mobile-menu-open{overflow:hidden;touch-action:none}
+  .site-nav{z-index:1000}
+  .nav-inner{position:relative;z-index:1001}
+  .menu-toggle{display:inline-grid;place-items:center;position:relative;z-index:1002;transition:background .2s,border-color .2s,transform .2s}
+  .menu-toggle[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg);transform:rotate(90deg)}
+  .nav-links{
+    display:flex;
+    position:fixed;
+    top:64px;
+    left:0;
+    right:0;
+    bottom:0;
+    height:calc(100dvh - 64px);
+    margin:0;
+    padding:20px 22px max(28px,env(safe-area-inset-bottom));
+    flex-direction:column;
+    gap:0;
+    background:var(--bg);
+    border-top:1px solid var(--line);
+    box-shadow:none;
+    z-index:999;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translateY(-8px);
+    transition:opacity .18s ease,transform .2s ease,visibility .18s step-end;
+  }
+  .nav-links.open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0);transition:opacity .18s ease,transform .2s ease,visibility 0s}
+  .nav-links a{display:flex;align-items:center;min-height:58px;padding:14px 4px;border-bottom:1px solid var(--line);font-family:var(--display);font-size:19px;color:var(--ink)}
+  .nav-links a::after{display:none}
+  .nav-links a:last-child{border-bottom:none}
+  .mobile-search-link{display:flex!important;color:var(--accent)!important}
+  .nav-search{display:none}
+  .math-mark{opacity:.055!important}.mm-3,.mm-6,.mm-8{display:none}
+}
+
+@media(max-width:640px){.layout:not(.layout-post) .sidebar{grid-template-columns:1fr}.hero h1{font-size:clamp(34px,12vw,52px)}}
