@@ -5,6 +5,10 @@ import io
 import math
 import os
 import tempfile
+import threading
+import time
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, List
@@ -119,6 +123,134 @@ def _collect_markdown(output, pipeline) -> str:
     return "\n\n".join(text for text in texts if text).strip()
 
 
+_OCR_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="math-hut-ocr")
+_OCR_JOBS: dict[str, dict[str, Any]] = {}
+_OCR_JOBS_LOCK = threading.Lock()
+_OCR_JOB_TTL_SECONDS = 60 * 60
+
+
+def _cleanup_ocr_jobs() -> None:
+    """Drop completed job payloads after one hour so Markdown results do not leak memory."""
+    cutoff = time.time() - _OCR_JOB_TTL_SECONDS
+    with _OCR_JOBS_LOCK:
+        stale = [
+            job_id
+            for job_id, job in _OCR_JOBS.items()
+            if job.get("finished_at") and job["finished_at"] < cutoff
+        ]
+        for job_id in stale:
+            _OCR_JOBS.pop(job_id, None)
+
+
+def _update_ocr_job(job_id: str, **changes: Any) -> None:
+    with _OCR_JOBS_LOCK:
+        job = _OCR_JOBS.get(job_id)
+        if job is not None:
+            job.update(changes)
+
+
+def _recognize_path(path: str) -> str:
+    pipeline = get_pipeline()
+    output = pipeline.predict(input=path)
+    markdown = _collect_markdown(output, pipeline)
+    if not markdown:
+        raise RuntimeError("PaddleOCR 未返回 Markdown 内容")
+    return markdown
+
+
+def _run_ocr_job(job_id: str, path: str) -> None:
+    _update_ocr_job(job_id, status="running", started_at=time.time())
+    try:
+        markdown = _recognize_path(path)
+        _update_ocr_job(
+            job_id,
+            status="done",
+            markdown=markdown,
+            finished_at=time.time(),
+        )
+    except Exception as exc:
+        _update_ocr_job(
+            job_id,
+            status="error",
+            error=str(exc),
+            finished_at=time.time(),
+        )
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
+async def _save_upload_for_ocr(file: UploadFile) -> str:
+    data = await file.read()
+    if not data:
+        raise HTTPException(400, "空文件")
+    if len(data) > 40 * 1024 * 1024:
+        raise HTTPException(413, "文件超过 40MB")
+
+    suffix = _suffix(file.filename or "upload", file.content_type)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+        temp_file.write(data)
+        return temp_file.name
+
+
+@app.post("/ocr/start")
+async def ocr_start(file: UploadFile = File(...)):
+    """Queue OCR and return immediately so the browser does not hold one long HTTP request."""
+    _cleanup_ocr_jobs()
+    path = await _save_upload_for_ocr(file)
+    job_id = uuid.uuid4().hex
+    with _OCR_JOBS_LOCK:
+        _OCR_JOBS[job_id] = {
+            "status": "queued",
+            "created_at": time.time(),
+            "filename": file.filename or "upload",
+            "markdown": "",
+            "error": "",
+        }
+
+    try:
+        _OCR_EXECUTOR.submit(_run_ocr_job, job_id, path)
+    except Exception:
+        with _OCR_JOBS_LOCK:
+            _OCR_JOBS.pop(job_id, None)
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+        raise
+
+    return {
+        "ok": True,
+        "job_id": job_id,
+        "status": "queued",
+        "engine": "PP-StructureV3",
+    }
+
+
+@app.get("/ocr/status/{job_id}")
+def ocr_status(job_id: str):
+    _cleanup_ocr_jobs()
+    with _OCR_JOBS_LOCK:
+        job = _OCR_JOBS.get(job_id)
+        if job is None:
+            raise HTTPException(404, "OCR 任务不存在或已过期")
+        snapshot = dict(job)
+
+    result = {
+        "ok": snapshot["status"] != "error",
+        "job_id": job_id,
+        "status": snapshot["status"],
+        "engine": "PP-StructureV3",
+    }
+    if snapshot["status"] == "done":
+        result["markdown"] = snapshot.get("markdown", "")
+    elif snapshot["status"] == "error":
+        result["error"] = snapshot.get("error", "OCR 失败")
+    return result
+
+
 @app.get("/health")
 def health():
     return {
@@ -126,6 +258,7 @@ def health():
         "engine": "PaddleOCR PP-StructureV3",
         "paid_api": False,
         "sketch": True,
+        "async_jobs": True,
     }
 
 
@@ -143,11 +276,7 @@ async def ocr(file: UploadFile = File(...)):
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
             f.write(data)
             tmp = f.name
-        pipeline = get_pipeline()
-        output = pipeline.predict(input=tmp)
-        markdown = _collect_markdown(output, pipeline)
-        if not markdown:
-            raise RuntimeError("PaddleOCR 未返回 Markdown 内容")
+        markdown = _recognize_path(tmp)
         return {
             "ok": True,
             "markdown": markdown,
