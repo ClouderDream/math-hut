@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PIL import Image, ImageOps
 
-app = FastAPI(title="Math Hut Local OCR", version="1.1")
+app = FastAPI(title="Math Hut Local OCR", version="1.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -258,7 +258,7 @@ def health():
         "engine": "PaddleOCR PP-StructureV3",
         "paid_api": False,
         "sketch": True,
-        "async_jobs": True,
+        "async_jobs": True,\n        "sketch_guard": True,
     }
 
 
@@ -308,43 +308,115 @@ def _crop_image(image: Image.Image, x: float, y: float, w: float, h: float) -> I
 
 
 def _basic_geometry(image: Image.Image):
+    """Extract only simple geometry.
+
+    Handwritten text/formulas create huge numbers of Hough primitives. V1.4
+    measures region complexity first and refuses vectorization when the crop is
+    text-heavy instead of returning a misleading SVG/TikZ reconstruction.
+    """
     rgb = np.array(image.convert("RGB"))
     gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
     gray = cv2.GaussianBlur(gray, (3, 3), 0)
-    edges = cv2.Canny(gray, 60, 160)
+    edges = cv2.Canny(gray, 70, 170)
+    edge_density = float(np.count_nonzero(edges)) / float(max(1, edges.size))
+
+    _, ink = cv2.threshold(
+        gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+    )
+    labels, _, stats, _ = cv2.connectedComponentsWithStats(ink, connectivity=8)
+    components = 0
+    for idx in range(1, labels):
+        area = int(stats[idx, cv2.CC_STAT_AREA])
+        if 6 <= area <= max(80, int(ink.size * 0.08)):
+            components += 1
 
     raw_lines = cv2.HoughLinesP(
         edges,
         rho=1,
         theta=np.pi / 180,
-        threshold=max(35, int(min(image.size) * 0.08)),
-        minLineLength=max(24, int(min(image.size) * 0.10)),
-        maxLineGap=max(8, int(min(image.size) * 0.03)),
+        threshold=max(34, int(min(image.size) * 0.07)),
+        minLineLength=max(26, int(min(image.size) * 0.11)),
+        maxLineGap=max(7, int(min(image.size) * 0.025)),
     )
-    lines = []
+    raw_line_count = 0 if raw_lines is None else len(raw_lines)
+
+    # Whole notebook pages and text-heavy crops are intentionally rejected.
+    too_complex = (
+        components > 120
+        or edge_density > 0.145
+        or raw_line_count > 70
+    )
+
+    analysis = {
+        "components": components,
+        "edge_density": round(edge_density, 5),
+        "raw_lines": raw_line_count,
+        "vectorizable": False,
+    }
+    if too_complex:
+        return [], [], analysis
+
+    # Deduplicate near-identical Hough segments.
+    candidates = []
     if raw_lines is not None:
-        for row in raw_lines[:80]:
+        for row in raw_lines[:120]:
             x1, y1, x2, y2 = map(int, row[0])
-            if math.hypot(x2 - x1, y2 - y1) >= 20:
-                lines.append((x1, y1, x2, y2))
+            length = math.hypot(x2 - x1, y2 - y1)
+            if length < 24:
+                continue
+            if (x2, y2) < (x1, y1):
+                x1, y1, x2, y2 = x2, y2, x1, y1
+            angle = math.atan2(y2 - y1, x2 - x1) % math.pi
+            mx, my = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+            candidates.append((length, angle, mx, my, (x1, y1, x2, y2)))
 
-    circles_raw = cv2.HoughCircles(
-        gray,
-        cv2.HOUGH_GRADIENT,
-        dp=1.2,
-        minDist=max(20, min(image.size) // 8),
-        param1=120,
-        param2=28,
-        minRadius=max(5, min(image.size) // 40),
-        maxRadius=max(10, min(image.size) // 3),
-    )
+    candidates.sort(reverse=True, key=lambda item: item[0])
+    lines = []
+    signatures = set()
+    for length, angle, mx, my, line in candidates:
+        key = (
+            round(angle / 0.07),
+            round(mx / 12.0),
+            round(my / 12.0),
+            round(length / 18.0),
+        )
+        if key in signatures:
+            continue
+        signatures.add(key)
+        lines.append(line)
+        if len(lines) >= 32:
+            break
+
     circles = []
-    if circles_raw is not None:
-        for circle in np.round(circles_raw[0, :20]).astype(int):
-            circles.append(tuple(map(int, circle)))
+    min_side = min(image.size)
+    if min_side >= 80 and components < 80:
+        circles_raw = cv2.HoughCircles(
+            gray,
+            cv2.HOUGH_GRADIENT,
+            dp=1.25,
+            minDist=max(30, min_side // 5),
+            param1=130,
+            param2=40,
+            minRadius=max(8, min_side // 28),
+            maxRadius=max(14, min_side // 3),
+        )
+        if circles_raw is not None:
+            accepted = []
+            for cx, cy, radius in np.round(circles_raw[0, :12]).astype(int):
+                duplicate = any(
+                    math.hypot(cx - ax, cy - ay) < max(10, radius * 0.25)
+                    and abs(radius - ar) < max(8, radius * 0.25)
+                    for ax, ay, ar in accepted
+                )
+                if not duplicate:
+                    accepted.append((int(cx), int(cy), int(radius)))
+            circles = accepted[:8]
 
-    return lines, circles
-
+    vectorizable = bool(lines or circles)
+    analysis["vectorizable"] = vectorizable
+    analysis["lines"] = len(lines)
+    analysis["circles"] = len(circles)
+    return lines, circles, analysis
 
 def _build_svg(width: int, height: int, lines, circles) -> str:
     parts = [
@@ -396,22 +468,30 @@ async def sketch(
         raise HTTPException(400, f"草图必须是可读取的图片：{exc}")
 
     crop = _crop_image(image, x, y, w, h)
-    lines, circles = _basic_geometry(crop)
-    svg = _build_svg(crop.width, crop.height, lines, circles)
-    tikz = _build_tikz(crop.width, crop.height, lines, circles)
+    lines, circles, analysis = _basic_geometry(crop)
+    vectorizable = bool(analysis.get("vectorizable"))
+    svg = _build_svg(crop.width, crop.height, lines, circles) if vectorizable else ""
+    tikz = _build_tikz(crop.width, crop.height, lines, circles) if vectorizable else ""
 
     buf = io.BytesIO()
     crop.save(buf, format="PNG", optimize=True)
     crop_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+
+    if vectorizable:
+        warning = "选区复杂度较低，已生成基础 SVG/TikZ；仍请对照真实裁切图复核。"
+    else:
+        warning = "选区包含较多文字/笔画或结构过复杂，已停止伪矢量化；建议直接保存真实裁切图，或缩小框选范围后重试。"
 
     return JSONResponse(
         {
             "ok": True,
             "svg": svg,
             "tikz": tikz,
+            "vectorizable": vectorizable,
             "crop_png_data_url": "data:image/png;base64," + crop_b64,
             "detected": {"lines": len(lines), "circles": len(circles)},
-            "warning": "TikZ 为基础几何检测结果；复杂曲线、手写文字与箭头请优先使用裁切图或 SVG 并人工校对。",
+            "analysis": analysis,
+            "warning": warning,
         }
     )
 
