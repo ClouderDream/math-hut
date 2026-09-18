@@ -132,3 +132,61 @@ PP-StructureV3 会加载完整文档解析流水线和多个模型。首次运�
 ## TikZ 结果不准确
 
 当前只对线段和圆等简单几何做确定性检测。复杂手绘优先使用裁切 PNG/SVG，不要强行采用错误 TikZ。
+
+
+## 浏览器提示 `signal is aborted without reason`
+
+### 现象
+
+后台能正常显示“已连接”，但识别密集手写整页或扫描 PDF 时，等待较长时间后出现：
+
+```text
+OCR 失败：signal is aborted without reason
+```
+
+### 根因
+
+旧版后台把一次完整 PP-StructureV3 识别放在单个 `fetch('/ocr')` 请求里，并设置了 10 分钟 `AbortController` 超时。CPU 版 PP-StructureV3 处理高密度手写页时可能超过这个窗口，于是是**浏览器主动中断请求**，并不是 PaddleOCR 返回了该错误。
+
+### 当前修复
+
+V1.3 已改为异步任务模式：
+
+```text
+POST /ocr/start
+  ↓
+立即返回 job_id
+  ↓
+本机单线程队列执行 PP-StructureV3
+  ↓
+GET /ocr/status/<job_id> 轮询
+  ↓
+done → 返回 Markdown
+```
+
+这样长时间识别不再依赖一个持续 10 分钟的 HTTP 连接。状态检查短暂失败时，后台会自动重试，不会直接终止本机任务。
+
+更新后请重启本地服务：
+
+```powershell
+cd G:\math-hut
+git pull --ff-only origin main
+cd tools\local-ocr
+.\stop.ps1
+.\start.ps1 -NoUpdate -NoBrowser
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:8765/health
+```
+
+新版返回中应包含：
+
+```json
+"async_jobs": true
+```
+
+若仍然没有该字段，说明浏览器已经更新，但本机 Local OCR 服务仍是旧代码，需要重新启动。
+
