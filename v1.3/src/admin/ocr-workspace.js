@@ -5,7 +5,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
   var ENDPOINT_KEY = 'hut_local_ocr_endpoint';
-  var state = { file: null, objectUrl: '', busy: false, sketchSvg: '', sketchTikz: '', cropDataUrl: '' };
+  var state = { file: null, objectUrl: '', busy: false, currentJobId: '', sketchSvg: '', sketchTikz: '', cropDataUrl: '' };
 
   function endpoint() {
     var el = $('ocrEndpoint');
@@ -79,10 +79,33 @@
     if (window.HUTProgress) { if (error) window.HUTProgress.error(text || '失败'); else if (p >= 100) window.HUTProgress.done(text || '完成'); else window.HUTProgress.set(p, text || '处理中…'); }
   }
 
-  async function fetchWithTimeout(url, options, ms) {
-    var ctl = new AbortController(); var t = setTimeout(function () { ctl.abort(); }, ms || 180000);
+  async function fetchWithTimeout(url, options, ms, label) {
+    var ctl = new AbortController(), timedOut = false, t = null;
+    if (ms && ms > 0) {
+      t = setTimeout(function () { timedOut = true; ctl.abort(); }, ms);
+    }
     options = Object.assign({}, options || {}, { signal: ctl.signal });
-    try { return await fetch(url, options); } finally { clearTimeout(t); }
+    try {
+      return await fetch(url, options);
+    } catch (e) {
+      var message = String((e && e.message) || e || '');
+      if (timedOut) {
+        throw new Error((label || '请求') + '超时。OCR 任务可能仍在本机运行，请保持服务开启后重试状态检查。');
+      }
+      if ((e && e.name === 'AbortError') || /aborted|abort/i.test(message)) {
+        throw new Error((label || '请求') + '被浏览器中断。请不要刷新页面，并确认本地 OCR 服务仍在运行。');
+      }
+      throw e;
+    } finally {
+      if (t) clearTimeout(t);
+    }
+  }
+
+  function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+  function elapsedText(startedAt) {
+    var sec = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+    if (sec < 60) return sec + ' 秒';
+    return Math.floor(sec / 60) + ' 分 ' + (sec % 60) + ' 秒';
   }
 
   async function checkService() {
@@ -115,13 +138,83 @@
     catch(e){ box.innerHTML='<pre>'+esc(text)+'</pre>'; }
   }
 
+  async function runLegacyOcr(form) {
+    progress(18, '本地服务为旧版本，使用兼容识别模式…');
+    var res = await fetchWithTimeout(endpoint() + '/ocr', { method: 'POST', body: form }, 30 * 60 * 1000, 'OCR 识别');
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+    return data.markdown || '';
+  }
+
+  async function pollOcrJob(jobId) {
+    var startedAt = Date.now(), consecutiveFailures = 0;
+    while (state.busy && state.currentJobId === jobId) {
+      await sleep(2200);
+      try {
+        var res = await fetchWithTimeout(endpoint() + '/ocr/status/' + encodeURIComponent(jobId), {}, 12000, 'OCR 状态检查');
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+        consecutiveFailures = 0;
+
+        if (data.status === 'done') return data.markdown || '';
+        if (data.status === 'error') throw new Error(data.error || '本机 OCR 执行失败');
+
+        var elapsed = elapsedText(startedAt);
+        if (data.status === 'queued') {
+          progress(22, 'OCR 已排队，等待本机模型空闲 · 已等待 ' + elapsed);
+        } else {
+          var seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+          var pseudo = Math.min(90, 35 + Math.floor(seconds / 20));
+          progress(pseudo, '本机 PP-StructureV3 正在识别 · 已用时 ' + elapsed + '。复杂手写整页可能需要数分钟。');
+        }
+      } catch (e) {
+        consecutiveFailures += 1;
+        if (consecutiveFailures >= 5) {
+          throw new Error('连续 5 次无法读取 OCR 状态：' + (e.message || e));
+        }
+        progress(30, 'OCR 仍在本机运行；状态检查暂时失败，正在自动重试（' + consecutiveFailures + '/5）');
+      }
+    }
+    throw new Error('OCR 任务已停止');
+  }
+
   async function runOcr() {
-    if (state.busy) return; if (!state.file) { progress(0, '请先选择图片或 PDF。', true); return; }
+    if (state.busy) return;
+    if (!state.file) { progress(0, '请先选择图片或 PDF。', true); return; }
     if (!(await checkService())) return;
-    state.busy = true; $('ocrRecognize').disabled = true;
-    try { progress(10, '正在发送到本机 OCR…'); var form = new FormData(); form.append('file', state.file, state.file.name); var res = await fetchWithTimeout(endpoint()+'/ocr',{method:'POST',body:form},10*60*1000); var data = await res.json().catch(function(){return{};}); if(!res.ok)throw new Error(data.detail||('HTTP '+res.status)); $('ocrResult').value=data.markdown||''; renderPreview(); progress(100,'OCR 完成，请对照原稿校对'); }
-    catch(e){ progress(100,'OCR 失败：'+(e.message||e),true); }
-    finally{ state.busy=false; $('ocrRecognize').disabled=false; }
+
+    state.busy = true;
+    state.currentJobId = '';
+    $('ocrRecognize').disabled = true;
+    try {
+      progress(8, '正在上传原稿并创建本机 OCR 任务…');
+      var form = new FormData();
+      form.append('file', state.file, state.file.name);
+
+      var startRes = await fetchWithTimeout(endpoint() + '/ocr/start', { method: 'POST', body: form }, 60000, '创建 OCR 任务');
+      var markdown = '';
+
+      if (startRes.status === 404 || startRes.status === 405) {
+        markdown = await runLegacyOcr(form);
+      } else {
+        var startData = await startRes.json().catch(function () { return {}; });
+        if (!startRes.ok) throw new Error(startData.detail || ('HTTP ' + startRes.status));
+        if (!startData.job_id) throw new Error('本地服务未返回 OCR 任务编号');
+        state.currentJobId = startData.job_id;
+        progress(18, 'OCR 任务已创建，等待本机处理…');
+        markdown = await pollOcrJob(startData.job_id);
+      }
+
+      $('ocrResult').value = markdown || '';
+      renderPreview();
+      progress(100, 'OCR 完成，请对照原稿校对');
+    } catch (e) {
+      progress(100, 'OCR 失败：' + (e.message || e), true);
+    } finally {
+      state.busy = false;
+      state.currentJobId = '';
+      $('ocrRecognize').disabled = false;
+    }
   }
 
   function insertIntoArticle(replace) {
@@ -149,7 +242,7 @@
     try{progress(30,'正在保存裁切 PNG…');await window.GH.saveBinary(path,m[1],null,'新增草图裁切图：'+name);insertMarkdownImage(rel,'草图');progress(100,'裁切图已保存并插入正文');}catch(e){progress(100,'裁切图保存失败：'+e.message,true);}
   }
 
-  function clearAll(){state.file=null;state.sketchSvg='';state.sketchTikz='';state.cropDataUrl='';if(state.objectUrl){URL.revokeObjectURL(state.objectUrl);state.objectUrl='';}if($('ocrFileInput'))$('ocrFileInput').value='';if($('ocrImagePreview')){$('ocrImagePreview').hidden=true;$('ocrImagePreview').removeAttribute('src');}if($('ocrDropHint')){$('ocrDropHint').hidden=false;$('ocrDropHint').innerHTML='<strong>拖入文件，或点击选择</strong><br><small>建议拍正、光线均匀、公式清晰</small>';}if($('ocrFileMeta'))$('ocrFileMeta').textContent='尚未选择文件';if($('ocrResult'))$('ocrResult').value='';if($('ocrPreview'))$('ocrPreview').innerHTML='';if($('ocrSvgResult'))$('ocrSvgResult').value='';if($('ocrTikzResult'))$('ocrTikzResult').value='';if($('ocrSketchPreview'))$('ocrSketchPreview').textContent='尚未生成草图结果';progress(0,'等待上传');}
+  function clearAll(){if(state.busy){progress(0,'OCR 正在本机运行，完成前请不要清空或刷新页面。',true);return;}state.file=null;state.currentJobId='';state.sketchSvg='';state.sketchTikz='';state.cropDataUrl='';if(state.objectUrl){URL.revokeObjectURL(state.objectUrl);state.objectUrl='';}if($('ocrFileInput'))$('ocrFileInput').value='';if($('ocrImagePreview')){$('ocrImagePreview').hidden=true;$('ocrImagePreview').removeAttribute('src');}if($('ocrDropHint')){$('ocrDropHint').hidden=false;$('ocrDropHint').innerHTML='<strong>拖入文件，或点击选择</strong><br><small>建议拍正、光线均匀、公式清晰</small>';}if($('ocrFileMeta'))$('ocrFileMeta').textContent='尚未选择文件';if($('ocrResult'))$('ocrResult').value='';if($('ocrPreview'))$('ocrPreview').innerHTML='';if($('ocrSvgResult'))$('ocrSvgResult').value='';if($('ocrTikzResult'))$('ocrTikzResult').value='';if($('ocrSketchPreview'))$('ocrSketchPreview').textContent='尚未生成草图结果';progress(0,'等待上传');}
 
   document.addEventListener('DOMContentLoaded',function(){addStyle();inject();setTimeout(checkService,800);
     document.addEventListener('click',function(ev){var tab=ev.target&&ev.target.closest?ev.target.closest('.tab[data-tab]'):null;if(tab){if(tab.dataset.tab==='ocr'){ev.preventDefault();setTimeout(function(){setOcrMode(true);checkService();},0);}else setTimeout(function(){setOcrMode(false);},0);}if(ev.target&&ev.target.closest&&ev.target.closest('#ocrDrop'))$('ocrFileInput').click();if(ev.target.id==='ocrCheckService')checkService();if(ev.target.id==='ocrRecognize')runOcr();if(ev.target.id==='ocrClear')clearAll();if(ev.target.id==='ocrInsert')insertIntoArticle(false);if(ev.target.id==='ocrReplace')insertIntoArticle(true);if(ev.target.id==='ocrBackToArticle'){var a=document.querySelector('.tab[data-tab="articles"]');if(a)a.click();}if(ev.target.id==='ocrSketchRun')runSketch();if(ev.target.id==='ocrSaveSvg')saveSvg();if(ev.target.id==='ocrSaveCrop')saveCrop();if(ev.target.id==='ocrCopy')navigator.clipboard&&navigator.clipboard.writeText($('ocrResult').value||'');if(ev.target.id==='ocrCopyTikz')navigator.clipboard&&navigator.clipboard.writeText($('ocrTikzResult').value||'');var mini=ev.target.closest&&ev.target.closest('[data-ocr-view]');if(mini){document.querySelectorAll('[data-ocr-view]').forEach(function(b){b.classList.toggle('active',b===mini);});var pv=mini.dataset.ocrView==='preview';$('ocrResult').hidden=pv;$('ocrPreview').hidden=!pv;if(pv)renderPreview();}},true);
