@@ -21,7 +21,7 @@
     if ($('ocrWorkspaceStyle')) return;
     var s = document.createElement('style');
     s.id = 'ocrWorkspaceStyle';
-    s.textContent = \`
+    s.textContent = `
       .admin-app.admin-ocr-mode{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"header" "main"!important}
       .admin-app.admin-ocr-mode .admin-side{display:none!important}
       .ocr-page{max-width:1680px;margin:0 auto;display:grid;gap:16px}
@@ -55,7 +55,7 @@
       @media(max-width:1180px){.ocr-service{grid-template-columns:1fr auto auto}.ocr-work{grid-template-columns:minmax(250px,.62fr) minmax(560px,1.38fr)}.ocr-result-pane textarea,.ocr-preview{height:470px}}
       @media(max-width:980px){.ocr-service{grid-template-columns:1fr}.ocr-work,.ocr-sketch-layout{grid-template-columns:1fr}.ocr-upload-card,.ocr-result-card{height:auto}.ocr-drop{min-height:260px}.ocr-result-pane textarea,.ocr-preview{height:420px}}
       @media(max-width:720px){.ocr-result-grid,.ocr-sketch-output{grid-template-columns:1fr}.ocr-result-pane textarea,.ocr-preview{height:360px}.ocr-crop-grid{grid-template-columns:1fr 1fr}.ocr-hero{align-items:flex-start;flex-direction:column}.ocr-card,.ocr-hero{padding:14px}.ocr-actions .btn{flex:1 1 42%}}
-    \`;
+    `;
     document.head.appendChild(s);
   }
 
