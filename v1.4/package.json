@@ -1,6 +1,6 @@
 {
   "name": "math-hut",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "private": true,
   "description": "云梦的数理小屋 —— 数学与物理主题的纯静态个人博客",
   "type": "commonjs",
