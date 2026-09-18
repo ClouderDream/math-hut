@@ -136,6 +136,23 @@ if (exists('admin/admin.js')) {
   }
 }
 
+// 7) V1.4 OCR 工作区：双栏校对、同步滚动、可视化框选和安全草图降级
+if (exists('admin/admin.js') && exists('admin/config.js')) {
+  const adminJs = read('admin/admin.js');
+  const adminCfg = read('admin/config.js');
+  [
+    ['OCR Markdown/预览双栏', 'ocr-result-grid'],
+    ['OCR 同步滚动', 'bindSyncScroll'],
+    ['草图可视化框选', 'bindCropSelector'],
+    ['草图真实裁切预览', 'crop_png_data_url'],
+  ].forEach(([name, token]) => {
+    if (!adminJs.includes(token)) fail('V1.4 ' + name + ' 未进入后台产物');
+  });
+  if (!adminCfg.includes('v1.4/content/posts') || !adminCfg.includes('v1.4/content/images')) {
+    fail('V1.4 后台配置仍未指向 v1.4/content');
+  }
+}
+
 if (errors.length) {
   console.error('\n[smoke failed] ' + errors.length + ' 个问题：');
   errors.forEach((e, i) => console.error((i + 1) + '. ' + e));
