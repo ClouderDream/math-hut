@@ -73,6 +73,10 @@ M87*、Sgr A* 等低光度活动星系核的等离子体非常稀薄，理想磁
 
 ## 5. 中地幔约 1000 km 的部分反射界面可能来自 bridgmanite 变形机制切换
 
+![中地幔俯冲带中由变形诱导的地震不连续面示意图](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs41467-026-78212-6/MediaObjects/41467_2026_78212_Fig6_HTML.png)
+
+*图：Magali et al., Nature Communications (2026)，CC BY 4.0。*
+
 ### 摘要
 Nature Communications 将俯冲热—力学模型、压力依赖的 bridgmanite 晶格织构与全波形模拟结合，提出俯冲带附近约 1000 km 深度的部分中地幔反射界面可能来自 bridgmanite 滑移系统随压力变化导致的地震各向异性突变，而不必完全归因于成分或温度界面。
 
